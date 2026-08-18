@@ -2,25 +2,19 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SEONGWONNOTTI | Crypto Terminal</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome 아이콘 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack-all.js"></script>
     <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background-color: #121212;
-            color: #F2F4F6;
-        }
+        body { font-family: 'Pretendard', sans-serif; background-color: #121212; color: #FFFFFF; user-select: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .toss-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .toss-card:hover { transform: translateY(-2px); }
-        .flex-auto-transition { transition: flex 0.3s ease-in-out; }
+        .toss-card { transition: box-shadow 0.2s ease; position: relative; }
 
         @keyframes flashUp {
             0% { background-color: rgba(240, 68, 82, 0.2); transform: scale(1.02); }
@@ -33,628 +27,316 @@
         .update-up { animation: flashUp 0.8s ease-out; color: #F04452 !important; }
         .update-down { animation: flashDown 0.8s ease-out; color: #3182F6 !important; }
 
-        .draggable { cursor: grab; }
-        .draggable:active { cursor: grabbing; opacity: 0.8; }
-        .drag-over { border: 2px dashed #3182F6; background-color: rgba(49, 130, 246, 0.05); }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #3A3A3C; border-radius: 10px; }
+        .custom-scroll:hover::-webkit-scrollbar-thumb { background: #4A4A4C; }
+        .custom-scroll { scrollbar-width: thin; scrollbar-color: #3A3A3C transparent; }
 
         .c-tab { transition: all 0.2s ease; }
         .word-break { word-break: break-word; }
+        
+        /* 🟢 대시보드 업계 표준 (GridStack) 편집 모드 스타일 */
+        .grid-stack-item-content { background-color: #1C1C1E; border-radius: 24px; transition: box-shadow 0.2s, border 0.2s; overflow-y: hidden !important; }
+        .grid-stack-item-content > div { height: 100%; }
+        .editing-layout .grid-stack-item-content { 
+            opacity: 0.96; 
+            border: 2px dashed #3182F6 !important; 
+            cursor: grab; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .editing-layout .grid-stack-item-content:active { cursor: grabbing; }
+        
+        /* GridStack 크기 조절 핸들 디자인 */
+        .ui-resizable-se {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%233182F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>');
+            background-position: center;
+            background-repeat: no-repeat;
+            right: 8px !important;
+            bottom: 8px !important;
+            width: 24px !important;
+            height: 24px !important;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        
+        .is-editing iframe { pointer-events: none; }
     </style>
 </head>
-<body class="bg-[#121212] min-h-screen p-3 sm:p-6 text-[#F2F4F6]">
-
-<div class="max-w-[1400px] mx-auto">
-    <!-- 헤더 영역 -->
-    <header class="flex justify-between items-center mb-6 pb-4 border-b border-[#2C2C2E]">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#3182F6] to-[#60A5FA] flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <i class="fa-solid fa-chart-line text-white text-lg"></i>
-            </div>
+<body class="min-h-screen p-3 sm:p-4 md:p-8 bg-[#121212]">
+    <div class="max-w-[1200px] mx-auto relative pb-24">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 md:mb-8 gap-3 md:gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">SEONGWONNOTTI</h1>
-                <p class="text-[12px] text-[#8B95A1] font-medium">Crypto Market Terminal</p>
+                <div class="flex items-center space-x-2 mb-1.5 md:mb-2 cursor-pointer w-fit" onclick="window.openLoginModal()">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs font-semibold tracking-wider text-green-500">LIVE TERMINAL</span>
+                </div>
+                <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">SEONGWONNOTTI</h1>
             </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button id="btn-admin-login" class="px-3.5 py-1.5 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[12px] sm:text-[13px] font-bold text-[#8B95A1] hover:text-white transition-all flex items-center gap-1.5">
-                <i class="fa-solid fa-user-shield"></i>
-                <span id="admin-btn-text">관리자 로그인</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- 메인 대시보드 그리드 -->
-    <main class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-stretch" id="main-grid">
-        
-        <!-- 왼쪽 컬럼 -->
-        <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6 items-stretch" id="col-left">
-            <!-- 실시간 시세 -->
-            <section id="widget-prices" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                <div class="flex justify-between items-center mb-4 sm:mb-6">
-                    <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 시세</h2>
-                    <span class="text-[12px] sm:text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5 sm:gap-4" id="crypto-cards">
-                    <div id="card-btc" data-symbol="BTC" data-name="비트코인" class="coin-card bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                        <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                            <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="BTC">
-                            <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">비트코인</span>
-                        </div>
-                        <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-btc">$ --</div>
-                        <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-btc">--%</div>
-                    </div>
-                    <div id="card-eth" data-symbol="ETH" data-name="이더리움" class="coin-card bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                        <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                            <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="ETH">
-                            <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">이더리움</span>
-                        </div>
-                        <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-eth">$ --</div>
-                        <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-eth">--%</div>
-                    </div>
-                    <div id="card-sol" data-symbol="SOL" data-name="솔라나" class="coin-card bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                        <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                            <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SOL">
-                            <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">솔라나</span>
-                        </div>
-                        <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sol">$ --</div>
-                        <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sol">--%</div>
-                    </div>
-                    <div id="card-sui" data-symbol="SUI" data-name="수이" class="coin-card bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                        <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                            <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SUI">
-                            <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">수이</span>
-                        </div>
-                        <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sui">$ --</div>
-                        <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sui">--%</div>
-                    </div>
-                </div>
-
-                <!-- 실시간 인라인 차트 영역 -->
-                <div id="inline-chart-container" class="hidden mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[#2C2C2E] transition-all duration-300">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center space-x-2">
-                            <img id="inline-chart-icon" src="" class="w-5 h-5 rounded-full" alt="icon">
-                            <span id="inline-chart-title" class="text-[13px] sm:text-[14px] font-bold text-[#3182F6]"></span>
-                        </div>
-                        <button id="btn-close-chart" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white bg-[#2C2C2E] px-2.5 py-1 rounded-full transition-colors">차트 닫기 ▲</button>
-                    </div>
-                    <div class="w-full h-[250px] sm:h-[320px] rounded-[16px] overflow-hidden bg-[#121212] border border-[#2C2C2E]">
-                        <iframe id="inline-tradingview-iframe" class="w-full h-full border-0" src=""></iframe>
-                    </div>
-                </div>
-            </section>
-
-            <!-- AI 자동 브리핑 -->
-            <section id="widget-ai" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                <div class="flex justify-between items-center mb-4 sm:mb-6">
-                    <div class="flex items-center space-x-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
-                        <span class="px-2 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[11px] font-bold rounded-[6px]">Gemini 3.7</span>
-                    </div>
-                </div>
-                <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 sm:mb-5 pb-1" id="ai-tabs">
-                    <button data-tab="news" class="ai-tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#3182F6] text-white text-[13px] sm:text-[14px] font-bold transition-colors">🔥 헤드라인</button>
-                    <button data-tab="analyst" class="ai-tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">💡 전문가 의견</button>
-                    <button data-tab="macro" class="ai-tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">🌍 거시경제</button>
-                    <button data-tab="sentiment" class="ai-tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">📊 투자 심리</button>
-                </div>
-                <div id="ai-content-box" class="bg-[#24272F] rounded-[20px] p-4 sm:p-5 min-h-[120px]">
-                    <p id="ai-text" class="text-[#D1D6DB] leading-relaxed text-[14px] sm:text-[15px] font-medium tracking-wide">데이터베이스 연결 대기 중...</p>
-                    <p id="ai-time" class="text-[11px] sm:text-[12px] text-[#8B95A1] mt-3 font-mono"></p>
-                </div>
-            </section>
-
-            <!-- 컴퍼니 인사이트 -->
-            <section id="widget-insight" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                <div class="flex justify-between items-center mb-4 sm:mb-6">
-                    <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
-                </div>
-                <div class="bg-[#24272F] rounded-[20px] p-4 sm:p-6">
-                    <h3 id="report-title" class="text-base sm:text-lg font-bold text-white mb-2 sm:mb-3">연결 대기 중...</h3>
-                    <p id="report-content" class="text-[#D1D6DB] text-[14px] sm:text-[15px] leading-relaxed mb-3 sm:mb-4 whitespace-pre-wrap">데이터를 불러오는 중입니다.</p>
-                    <div class="flex justify-between items-center text-[11px] sm:text-[12px] text-[#8B95A1] font-mono">
-                        <span id="report-date">--</span>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- 오른쪽 컬럼 -->
-        <div class="lg:col-span-5 flex flex-col gap-4 md:gap-6 items-stretch" id="col-right">
             
-            <!-- 시장 심리 -->
-            <section id="widget-fear" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mb-3 sm:mb-4">시장 심리 (Fear & Greed)</h2>
-                <div class="flex items-center justify-between bg-[#24272F] rounded-[20px] p-4 sm:p-5">
-                    <div class="flex flex-col">
-                        <span id="fg-value" class="text-3xl sm:text-4xl font-extrabold text-white mb-1">--</span>
-                        <span id="fg-class" class="text-[13px] sm:text-[14px] font-bold text-[#8B95A1]">분석중</span>
-                    </div>
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-[#2C2C2E] flex items-center justify-center" id="fg-ring">
-                        <i class="fa-solid fa-fire text-xl sm:text-2xl text-[#8B95A1]" id="fg-icon"></i>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 실시간 속보 -->
-            <section id="widget-news" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 속보</h2>
-                    <span class="text-[11px] sm:text-[12px] px-2 py-1 bg-[#2C2C2E] text-[#8B95A1] rounded-[6px]">Auto</span>
-                </div>
-                <ul id="news-list" class="space-y-3 max-h-[260px] sm:max-h-[360px] overflow-y-auto hide-scrollbar pr-1">
-                    <li class="text-[#8B95A1] text-[13px] sm:text-[14px] text-center py-4">뉴스를 불러오는 중입니다... <i class="fa-solid fa-spinner fa-spin ml-1"></i></li>
-                </ul>
-            </section>
-
-            <!-- 의견 나누기 (댓글) -->
-            <section id="widget-comments" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex-1 min-h-[380px] sm:min-h-[450px] flex flex-col" draggable="false">
-                <div class="flex justify-between items-center mb-3 sm:mb-4 pr-1">
-                    <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">의견 나누기</h2>
-                    <span id="db-status" class="text-[11px] sm:text-[12px] text-[#8B95A1] bg-[#2C2C2E] px-2 py-1 rounded-[6px]">연결 확인중</span>
-                </div>
-                
-                <!-- 댓글 방 분리 탭 -->
-                <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-3 sm:mb-4 pb-1 w-full" id="comment-rooms">
-                    <button data-room="all" class="c-tab active whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#3182F6] text-white text-[12px] sm:text-[13px] font-bold">전체 시장</button>
-                    <button data-room="BTC" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">비트코인</button>
-                    <button data-room="ETH" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">이더리움</button>
-                    <button data-room="SOL" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">솔라나</button>
-                    <button data-room="SUI" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">수이</button>
-                </div>
-
-                <!-- 댓글 폼 -->
-                <form id="comment-form" class="flex flex-col gap-2.5 mb-4 sm:mb-6 w-full pb-4 sm:pb-6 border-b border-[#2C2C2E]">
-                    <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="닉네임 (자동 저장)" maxlength="15">
-                    <div class="flex gap-2 w-full">
-                        <input type="text" id="comment-input" class="flex-1 bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="자유롭게 의견을 남겨주세요.">
-                        <button type="submit" id="comment-submit" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-[14px] sm:rounded-[16px] text-[13px] sm:text-[15px] font-bold transition-colors whitespace-nowrap shrink-0">등록</button>
-                    </div>
-                </form>
-
-                <!-- 댓글 리스트 -->
-                <div id="comments-list" class="flex-1 max-h-[350px] sm:max-h-[460px] overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pr-1">
-                    <div class="text-[#8B95A1] py-8 text-center text-[14px]">데이터베이스 연결 대기 중...</div>
-                </div>
-            </section>
-        </div>
-    </main>
-</div>
-
-<!-- 파이어베이스 인증 전용 안전한 관리자 로그인 모달 -->
-<div id="login-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
-    <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-sm border border-[#2C2C2E] shadow-2xl">
-        <div class="flex justify-between items-center mb-5">
-            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-lock text-[#3182F6]"></i> 관리자 로그인
-            </h3>
-            <button id="btn-close-login" class="text-[#8B95A1] hover:text-white transition-colors text-lg">✕</button>
-        </div>
-        <form id="admin-login-form" class="space-y-4">
-            <div>
-                <label class="block text-[12px] font-bold text-[#8B95A1] mb-1">이메일 계정</label>
-                <input type="email" id="login-email" required class="w-full bg-[#24272F] text-white p-3 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6] text-[14px]" placeholder="admin@example.com">
+            <div id="admin-toolbar" class="hidden items-center gap-3 bg-[#1C1C1E] border border-[#3182F6]/50 rounded-[16px] px-4 py-2 shadow-lg">
+                <span class="text-[13px] font-bold text-[#3182F6] hidden sm:inline"><i class="fa-solid fa-crown mr-1"></i> 관리자</span>
+                <button onclick="window.toggleEditMode()" id="btn-edit-mode" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">📐 마그네틱 레이아웃 편집</button>
+                <button onclick="window.saveLayout()" id="btn-save-layout" class="hidden bg-[#3182F6] hover:bg-blue-600 text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors shadow-[0_0_10px_rgba(49,130,246,0.5)]">💾 레이아웃 저장</button>
+                <button onclick="window.resetDefaultLayout()" id="btn-reset-layout" class="hidden bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[#8B95A1] hover:text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">🔄 기본 정렬</button>
+                <button onclick="window.openAdminEdit()" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">📝 글쓰기</button>
+                <button onclick="window.logoutAdmin()" class="text-[12px] font-bold text-[#F04452] hover:text-red-400 ml-1"><i class="fa-solid fa-power-off"></i></button>
             </div>
-            <div>
-                <label class="block text-[12px] font-bold text-[#8B95A1] mb-1">비밀번호</label>
-                <input type="password" id="login-password" required class="w-full bg-[#24272F] text-white p-3 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6] text-[14px]" placeholder="••••••••">
-            </div>
-            <button type="submit" id="btn-submit-login" class="w-full py-3 bg-[#3182F6] hover:bg-blue-600 text-white font-bold rounded-[14px] transition-colors text-[15px] mt-2">
-                인증 및 로그인
-            </button>
-        </form>
-    </div>
-</div>
+        </header>
 
-<!-- 관리자용 인사이트 발행 모달 팝업 -->
-<div id="admin-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
-    <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-lg border border-[#2C2C2E]">
-        <h3 class="text-xl font-bold text-white mb-4">인사이트 리포트 발행</h3>
-        <input type="text" id="edit-report-title" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-3 focus:outline-none focus:bg-[#2C2C2E]" placeholder="제목을 입력하세요">
-        <textarea id="edit-report-content" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-4 h-40 resize-none focus:outline-none focus:bg-[#2C2C2E]" placeholder="내용을 입력하세요"></textarea>
-        <div class="flex justify-end gap-3">
-            <button id="btn-cancel-report" class="px-4 py-2 text-[#8B95A1] hover:text-white font-medium transition-colors">취소</button>
-            <button id="btn-save-report" class="px-5 py-2 bg-[#3182F6] hover:bg-blue-600 text-white rounded-[10px] font-bold transition-colors">발행하기</button>
-        </div>
-    </div>
-</div>
-
-<!-- 플로팅 관리자 툴바 -->
-<div id="admin-toolbar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1C1C1E] border border-[#3182F6]/50 shadow-[0_0_20px_rgba(49,130,246,0.2)] rounded-full px-6 py-3 hidden items-center gap-4 z-50">
-    <span class="text-[13px] font-bold text-[#3182F6] flex items-center gap-1.5">
-        <i class="fa-solid fa-user-shield"></i> <span id="admin-user-display">관리자 인증됨</span>
-    </span>
-    <div class="h-4 w-[1px] bg-[#2C2C2E]"></div>
-    <span class="text-[12px] text-[#8B95A1]">UI 드래그 & 확장 가능</span>
-    <button id="btn-save-layout" class="bg-[#3182F6] hover:bg-blue-600 text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">위치 저장</button>
-    <button id="btn-open-report" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">글쓰기</button>
-    <div class="h-4 w-[1px] bg-[#2C2C2E]"></div>
-    <button id="btn-logout-admin" class="text-[12px] font-bold text-[#F04452] hover:text-red-400 px-2">로그아웃</button>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // =========================================================================
-    // 1. 설정 및 전역 상태 (Configuration & State)
-    // =========================================================================
-    const myFirebaseConfig = {
-        apiKey: "AIzaSyBhJ9gMEGUXzeksFObiH9aL-n8Yg2VSgxA",
-        authDomain: "seongwonnotti-crypto-news.firebaseapp.com",
-        projectId: "seongwonnotti-crypto-news",
-        storageBucket: "seongwonnotti-crypto-news.firebasestorage.app",
-        messagingSenderId: "205067848367",
-        appId: "1:205067848367:web:87c8e84cc4f5c15de5a25a",
-        measurementId: "G-99HFYR2SPV"
-    };
-
-    const state = {
-        app: null,
-        auth: null,
-        db: null,
-        isAdmin: false,
-        priceCache: {},
-        aiData: { news: "", analyst: "", macro: "", sentiment: "", updatedAt: 0 },
-        commentsData: [],
-        currentCommentRoom: 'all',
-        openedReplies: new Set(),
-        activeChartSymbol: null
-    };
-
-    const coinIcons = {
-        'BTC': 'https://assets.coingecko.com/coins/images/1/standard/bitcoin.png',
-        'ETH': 'https://assets.coingecko.com/coins/images/279/standard/ethereum.png',
-        'SOL': 'https://assets.coingecko.com/coins/images/4128/standard/solana.png',
-        'SUI': 'https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png'
-    };
-
-    // =========================================================================
-    // 2. 유틸리티 함수 (Utility Functions)
-    // =========================================================================
-    function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.className = "fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#3182F6] text-white px-5 py-3 rounded-full shadow-lg font-bold text-[14px] z-50 transition-all duration-300 translate-y-10 opacity-0";
-        toast.textContent = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
-        setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-
-    function escapeHTML(str) {
-        if(!str) return '';
-        return str.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag]));
-    }
-
-    // =========================================================================
-    // 3. API 데이터 호출 (API Fetch Functions)
-    // =========================================================================
-    async function updatePrices() {
-        try {
-            const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","SUIUSDT"]');
-            const data = await res.json();
+        <!-- 🚀 업계 표준 GridStack 레이아웃 엔진 적용 -->
+        <main class="grid-stack mt-2 sm:mt-4" id="main-grid">
             
-            data.forEach(coin => {
-                let symbol = coin.symbol.replace('USDT', '').toLowerCase();
-                let price = parseFloat(coin.lastPrice);
-                let changePct = parseFloat(coin.priceChangePercent);
-                
-                const priceEl = document.getElementById(`price-${symbol}`);
-                const pctEl = document.getElementById(`pct-${symbol}`);
-                const cardEl = document.getElementById(`card-${symbol}`);
-                if(!priceEl || !pctEl || !cardEl) return;
-
-                let formattedPrice = price < 10 ? price.toFixed(4) : price.toLocaleString('en-US', {maximumFractionDigits:2});
-                const prevPrice = state.priceCache[symbol];
-                
-                if (prevPrice !== undefined && prevPrice !== price) {
-                    cardEl.classList.remove('update-up', 'update-down');
-                    void cardEl.offsetWidth; 
-                    if (price > prevPrice) cardEl.classList.add('update-up');
-                    else if (price < prevPrice) cardEl.classList.add('update-down');
-                }
-                state.priceCache[symbol] = price;
-
-                priceEl.textContent = `$ ${formattedPrice}`;
-                pctEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
-                
-                if (changePct > 0) pctEl.style.color = '#F04452';
-                else if (changePct < 0) pctEl.style.color = '#3182F6';
-                else pctEl.style.color = '#8B95A1';
-            });
-        } catch (e) { console.log('Price update failed', e); }
-    }
-
-    async function updateFearGreed() {
-        try {
-            const res = await fetch('https://api.alternative.me/fng/');
-            const data = await res.json();
-            const value = data.data[0].value;
-            
-            document.getElementById('fg-value').textContent = value;
-            
-            let krClass = '중립', color = '#8B95A1', icon = 'fa-scale-balanced';
-            if(value <= 25) { krClass = '극단적 공포'; color = '#3182F6'; icon = 'fa-snowflake'; }
-            else if(value <= 45) { krClass = '공포'; color = '#3182F6'; icon = 'fa-cloud-rain'; }
-            else if(value >= 75) { krClass = '극단적 탐욕'; color = '#F04452'; icon = 'fa-fire'; }
-            else if(value >= 55) { krClass = '탐욕'; color = '#F04452'; icon = 'fa-arrow-trend-up'; }
-            
-            document.getElementById('fg-class').textContent = krClass;
-            document.getElementById('fg-class').style.color = color;
-            document.getElementById('fg-value').style.color = color;
-            document.getElementById('fg-ring').style.borderColor = color;
-            
-            const iconEl = document.getElementById('fg-icon');
-            iconEl.className = `fa-solid ${icon} text-2xl`;
-            iconEl.style.color = color;
-        } catch (e) { console.log('F&G update failed', e); }
-    }
-
-    async function fetchNews() {
-        try {
-            const cryptoCompareReq = fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN').then(res => res.json()).then(data => {
-                return data.Data.slice(0, 15).map(item => ({
-                    title: item.title, url: item.url, source: item.source_info.name, time: item.published_on * 1000
-                }));
-            });
-
-            const investingReq = fetch('https://api.rss2json.com/v1/api.json?rss_url=https://kr.investing.com/rss/news_301.rss').then(res => res.json()).then(data => {
-                if(!data.items) return [];
-                return data.items.slice(0, 10).map(item => ({
-                    title: item.title, url: item.link, source: 'Investing.com', time: new Date(item.pubDate.replace(/-/g, '/')).getTime()
-                }));
-            });
-
-            const results = await Promise.allSettled([cryptoCompareReq, investingReq]);
-            let allNews = [];
-            if(results[0].status === 'fulfilled') allNews = allNews.concat(results[0].value);
-            if(results[1].status === 'fulfilled') allNews = allNews.concat(results[1].value);
-
-            allNews.sort((a, b) => b.time - a.time);
-            const list = document.getElementById('news-list');
-            list.innerHTML = '';
-            
-            allNews.slice(0, 6).forEach(item => {
-                const date = new Date(item.time);
-                const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                list.innerHTML += `
-                    <li class="group border-b border-[#2C2C2E] pb-3 last:border-0 last:pb-0">
-                        <a href="${escapeHTML(item.url)}" target="_blank" class="block">
-                            <div class="text-[14px] text-[#D1D6DB] group-hover:text-white transition-colors line-clamp-2 leading-snug mb-1 word-break">${escapeHTML(item.title)}</div>
-                            <div class="text-[11px] text-[#8B95A1] font-medium tracking-wide">${escapeHTML(item.source)} • ${timeStr}</div>
-                        </a>
-                    </li>
-                `;
-            });
-        } catch (e) {
-            document.getElementById('news-list').innerHTML = `<li class="text-[#8B95A1] text-[13px] text-center">뉴스 피드를 가져올 수 없습니다.</li>`;
-        }
-    }
-
-    // =========================================================================
-    // 4. UI 및 렌더링 함수 (UI & Rendering)
-    // =========================================================================
-    function switchAITab(category) {
-        document.querySelectorAll('.ai-tab-btn').forEach(btn => {
-            btn.classList.remove('bg-[#3182F6]', 'text-white');
-            btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
-            if(btn.dataset.tab === category) {
-                btn.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
-                btn.classList.add('bg-[#3182F6]', 'text-white');
-            }
-        });
-        const safeText = escapeHTML(state.aiData[category] || "데이터가 아직 생성되지 않았습니다.");
-        document.getElementById('ai-text').innerHTML = safeText.replace(/\n/g, '<br>');
-    }
-
-    function changeCommentRoom(room) {
-        state.currentCommentRoom = room;
-        document.querySelectorAll('.c-tab').forEach(btn => {
-            btn.classList.remove('bg-[#3182F6]', 'text-white');
-            btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
-            if(btn.dataset.room === room) {
-                btn.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
-                btn.classList.add('bg-[#3182F6]', 'text-white');
-            }
-        });
-        renderComments();
-    }
-
-    function toggleChart(symbol, name) {
-        const container = document.getElementById('inline-chart-container');
-        const title = document.getElementById('inline-chart-title');
-        const icon = document.getElementById('inline-chart-icon');
-        const iframe = document.getElementById('inline-tradingview-iframe');
-
-        if (state.activeChartSymbol === symbol) {
-            closeChart();
-            return;
-        }
-
-        document.querySelectorAll('.coin-card').forEach(card => card.classList.remove('border-2', 'border-[#3182F6]'));
-        const activeCard = document.getElementById(`card-${symbol.toLowerCase()}`);
-        if (activeCard) activeCard.classList.add('border-2', 'border-[#3182F6]');
-
-        state.activeChartSymbol = symbol;
-        title.textContent = `${name} (${symbol}/USDT) 실시간 차트`;
-        if (coinIcons[symbol]) icon.src = coinIcons[symbol];
-        iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=BINANCE%3A${symbol}USDT&interval=15&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=1C1C1E&theme=dark&style=1&timezone=Asia%2FSeoul`;
-        container.classList.remove('hidden');
-    }
-
-    function closeChart() {
-        document.getElementById('inline-tradingview-iframe').src = '';
-        document.getElementById('inline-chart-container').classList.add('hidden');
-        document.querySelectorAll('.coin-card').forEach(card => card.classList.remove('border-2', 'border-[#3182F6]'));
-        state.activeChartSymbol = null;
-    }
-
-    function renderComments() {
-        const list = document.getElementById('comments-list');
-        const roomComments = state.commentsData.filter(c => (c.room || 'all') === state.currentCommentRoom);
-        
-        if (roomComments.length === 0) {
-             list.innerHTML = `<div class="text-[#8B95A1] py-8 text-center text-[14px]">이 방에 첫 번째 의견을 남겨주세요.</div>`;
-             return;
-        }
-
-        const currentUserId = state.auth?.currentUser?.uid; 
-
-        function countDescendants(parentId) {
-            const children = roomComments.filter(c => c.parentId === parentId);
-            let count = children.length;
-            children.forEach(child => count += countDescendants(child.id));
-            return count;
-        }
-
-        function buildCommentTree(parentId, depth) {
-            const children = roomComments.filter(c => c.parentId === parentId).sort((a, b) => parentId ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
-            if (children.length === 0) return '';
-
-            let html = '';
-            const containerClass = depth === 0 ? 'mb-4' : (depth === 1 ? 'mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3' : 'mt-2 ml-2 border-l border-dashed border-[#4A4A4C] pl-2');
-
-            children.forEach(c => {
-                const isMe = c.userId === currentUserId;
-                const isAdmin = c.role === 'admin';
-                const date = new Date(c.createdAt);
-                const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                
-                let badge = ''; let nameColor = depth === 0 ? 'text-white' : 'text-[#8B95A1]';
-                if (isAdmin) { badge = `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] font-bold ml-1.5">⭐️ 관리자</span>`; nameColor = 'text-[#3182F6]'; } 
-                else if (isMe) { badge = `<span class="text-[#8B95A1] ml-1 text-[11px]">(나)</span>`; }
-
-                const deleteBtn = (state.isAdmin || isMe) ? `<button data-action="delete" data-id="${c.id}" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 transition-colors ml-2 bg-[#F04452]/10 px-1.5 py-0.5 rounded">삭제</button>` : '';
-                const bubbleBg = depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
-                const textSize = depth === 0 ? 'text-[15px]' : 'text-[14px]';
-                const descCount = countDescendants(c.id);
-                
-                const safeText = escapeHTML(c.text).replace(/\n/g, '<br>');
-                const safeNickname = escapeHTML(c.nickname);
-
-                html += `
-                    <div class="flex flex-col ${containerClass}">
-                        <div class="flex items-center space-x-2 mb-1.5">
-                            <span class="text-[13px] font-bold ${nameColor}">${safeNickname} ${badge}</span>
-                            <span class="text-[11px] text-[#8B95A1] font-mono">${timeStr}</span>
-                            ${deleteBtn}
-                        </div>
-                        <div class="${textSize} text-[#D1D6DB] word-break leading-relaxed ${bubbleBg} px-4 py-3 rounded-[16px] rounded-tl-[4px] w-fit max-w-[95%] shadow-sm">
-                            ${safeText}
+            <!-- 1. 실시간 시세 -->
+            <div class="grid-stack-item" gs-id="widget-prices" gs-w="7" gs-h="14" gs-min-w="4" gs-min-h="10">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 h-full">
+                        <div class="flex justify-between items-center mb-4 sm:mb-6 shrink-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 시세</h2>
+                            <span class="text-[12px] sm:text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
                         </div>
                         
-                        <div class="mt-2 ml-2 flex items-center gap-3">
-                            <button data-action="toggle-form" data-id="${c.id}" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
-                            ${(descCount > 0) ? `<button data-action="toggle-replies" data-id="${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${state.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${state.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
-                        </div>
-                        
-                        <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
-                            <div class="flex gap-2">
-                                <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[12px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] transition-all min-w-0 border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글을 남겨주세요...">
-                                <button data-action="submit-reply" data-id="${c.id}" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[12px] text-[13px] font-bold whitespace-nowrap shrink-0 transition-colors">등록</button>
+                        <div class="flex-1 overflow-y-auto custom-scroll pr-1 min-h-0 relative flex flex-col">
+                            <div id="coin-cards-container" class="grid grid-cols-2 gap-2.5 sm:gap-4 shrink-0 transition-opacity duration-300">
+                                <div id="card-btc" onclick="window.toggleInlineChart('BTC', '비트코인')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                    <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                        <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="BTC">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">비트코인</span>
+                                    </div>
+                                    <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-btc">$ --</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-btc">--%</div>
+                                </div>
+                                <div id="card-eth" onclick="window.toggleInlineChart('ETH', '이더리움')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                    <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                        <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="ETH">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">이더리움</span>
+                                    </div>
+                                    <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-eth">$ --</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-eth">--%</div>
+                                </div>
+                                <div id="card-sol" onclick="window.toggleInlineChart('SOL', '솔라나')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                    <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                        <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SOL">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">솔라나</span>
+                                    </div>
+                                    <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sol">$ --</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sol">--%</div>
+                                </div>
+                                <div id="card-sui" onclick="window.toggleInlineChart('SUI', '수이')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                    <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                        <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SUI">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">수이</span>
+                                    </div>
+                                    <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sui">$ --</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sui">--%</div>
+                                </div>
+                            </div>
+
+                            <div id="inline-chart-container" class="hidden absolute inset-0 bg-[#1C1C1E] z-20 flex-col pb-1">
+                                <div class="flex justify-between items-center mb-3 pt-1">
+                                    <button onclick="window.closeInlineChart()" class="flex items-center text-[12px] font-bold text-white hover:text-blue-400 bg-[#2C2C2E] hover:bg-[#3A3A3C] px-3 py-1.5 rounded-[10px] transition-colors shadow-sm"><i class="fa-solid fa-arrow-left mr-2"></i> 리스트로 돌아가기</button>
+                                    <div class="flex items-center space-x-2">
+                                        <img id="inline-chart-icon" src="" class="w-5 h-5 rounded-full" alt="icon">
+                                        <span id="inline-chart-title" class="text-[13px] sm:text-[14px] font-bold text-[#3182F6]"></span>
+                                    </div>
+                                </div>
+                                <div class="w-full flex-1 rounded-[16px] overflow-hidden bg-[#121212] border border-[#2C2C2E]">
+                                    <iframe id="inline-tradingview-iframe" class="w-full h-full border-0" src=""></iframe>
+                                </div>
                             </div>
                         </div>
-                `;
-                
-                const childrenHtml = buildCommentTree(c.id, depth + 1);
-                if (descCount > 0) {
-                    const isHidden = state.openedReplies.has(c.id) ? '' : 'hidden';
-                    html += `<div id="replies-${c.id}" class="${isHidden}">${childrenHtml}</div>`;
-                } else {
-                    html += childrenHtml;
-                }
-                html += `</div>`;
-            });
-            return html;
-        }
+                    </div>
+                </section>
+            </div>
 
-        list.innerHTML = buildCommentTree(null, 0) || buildCommentTree(undefined, 0); 
-    }
+            <!-- 2. 시장 심리 -->
+            <div class="grid-stack-item" gs-id="widget-fear" gs-w="5" gs-h="7" gs-min-w="3" gs-min-h="6">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 justify-center h-full">
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mb-3 sm:mb-4 shrink-0">시장 심리 (Fear & Greed)</h2>
+                        <div class="flex items-center justify-between bg-[#24272F] rounded-[20px] p-4 sm:p-5 shrink-0">
+                            <div class="flex flex-col">
+                                <span id="fg-value" class="text-3xl sm:text-4xl font-extrabold text-white mb-1">--</span>
+                                <span id="fg-class" class="text-[13px] sm:text-[14px] font-bold text-[#8B95A1]">분석중</span>
+                            </div>
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-[#2C2C2E] flex items-center justify-center" id="fg-ring">
+                                <i class="fa-solid fa-fire text-xl sm:text-2xl text-[#8B95A1]" id="fg-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-    // =========================================================================
-    // 5. Firebase 인증 & 데이터베이스 (Firebase Core Logic)
-    // =========================================================================
-    async function initFirebaseApp() {
-        try {
-            state.app = initializeApp(myFirebaseConfig);
-            state.auth = getAuth(state.app);
-            state.db = getFirestore(state.app);
+            <!-- 3. AI 자동 브리핑 -->
+            <div class="grid-stack-item" gs-id="widget-ai" gs-w="7" gs-h="11" gs-min-w="4" gs-min-h="9">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 h-full">
+                        <div class="flex justify-between items-center mb-4 sm:mb-6 shrink-0">
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
+                                <span class="px-2 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[11px] font-bold rounded-[6px]">Gemini 3.7</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 sm:mb-5 pb-1 shrink-0">
+                            <button onclick="window.switchTab('news')" id="tab-news" class="tab-btn active whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#3182F6] text-white text-[13px] sm:text-[14px] font-bold transition-colors">🔥 헤드라인</button>
+                            <button onclick="window.switchTab('analyst')" id="tab-analyst" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">💡 전문가 의견</button>
+                            <button onclick="window.switchTab('macro')" id="tab-macro" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">🌍 거시경제</button>
+                            <button onclick="window.switchTab('sentiment')" id="tab-sentiment" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">📊 투자 심리</button>
+                        </div>
+                        <div class="bg-[#24272F] rounded-[20px] p-4 sm:p-5 flex-1 overflow-y-auto custom-scroll min-h-0">
+                            <p id="ai-text" class="text-[#D1D6DB] leading-relaxed text-[14px] sm:text-[15px] font-medium tracking-wide">데이터베이스 연결 대기 중...</p>
+                            <p id="ai-time" class="text-[11px] sm:text-[12px] text-[#8B95A1] mt-3 font-mono"></p>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-            // 파이어베이스 인증 상태 실시간 감지
-            onAuthStateChanged(state.auth, async (user) => {
-                if (user && !user.isAnonymous) {
-                    // 이메일/비밀번호로 로그인한 사용자는 '관리자'로 승격
-                    state.isAdmin = true;
-                    document.getElementById('admin-btn-text').textContent = "관리자 모드 활성";
-                    document.getElementById('admin-user-display').textContent = user.email;
-                    enableAdminMode();
-                } else {
-                    // 익명 사용자 또는 로그아웃 상태
-                    state.isAdmin = false;
-                    document.getElementById('admin-btn-text').textContent = "관리자 로그인";
-                    disableAdminMode();
-                    
-                    if (!user) {
-                        // 사용자가 전혀 없으면 자동으로 익명 로그인 처리
-                        await signInAnonymously(state.auth);
-                    }
-                }
-                renderComments();
-            });
+            <!-- 4. 실시간 속보 -->
+            <div class="grid-stack-item" gs-id="widget-news" gs-w="5" gs-h="12" gs-min-w="4" gs-min-h="8">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 h-full">
+                        <div class="flex justify-between items-center mb-4 shrink-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 속보</h2>
+                            <span class="text-[11px] sm:text-[12px] px-2 py-1 bg-[#2C2C2E] text-[#8B95A1] rounded-[6px]">Auto</span>
+                        </div>
+                        <ul id="news-list" class="space-y-3 overflow-y-auto custom-scroll pr-2 flex-1 min-h-0">
+                            <li class="text-[#8B95A1] text-[13px] sm:text-[14px] text-center py-4">뉴스를 불러오는 중입니다... <i class="fa-solid fa-spinner fa-spin ml-1"></i></li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
 
-            document.getElementById('db-status').innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> 서버 연결됨</span>`;
-            
-            listenToFirebase();
-            loadLayout();
-        } catch (error) {
-            console.error("Firebase 초기화 에러:", error);
-            document.getElementById('db-status').innerHTML = `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> 서버 연결 실패</span>`;
-        }
-    }
+            <!-- 5. 컴퍼니 인사이트 -->
+            <div class="grid-stack-item" gs-id="widget-insight" gs-w="7" gs-h="10" gs-min-w="4" gs-min-h="8">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 h-full">
+                        <div class="flex justify-between items-center mb-4 sm:mb-6 shrink-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
+                        </div>
+                        <div class="bg-[#24272F] rounded-[20px] p-4 sm:p-6 flex-1 overflow-y-auto custom-scroll min-h-0">
+                            <h3 id="report-title" class="text-base sm:text-lg font-bold text-white mb-2 sm:mb-3">연결 대기 중...</h3>
+                            <p id="report-content" class="text-[#D1D6DB] text-[14px] sm:text-[15px] leading-relaxed mb-3 sm:mb-4 whitespace-pre-wrap">데이터를 불러오는 중입니다.</p>
+                            <div class="flex justify-between items-center text-[11px] sm:text-[12px] text-[#8B95A1] font-mono">
+                                <span id="report-date">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-    function listenToFirebase() {
-        if(!state.db) return;
+            <!-- 6. 의견 나누기 (댓글) -->
+            <div class="grid-stack-item" gs-id="widget-comments" gs-w="5" gs-h="16" gs-min-w="4" gs-min-h="12">
+                <section class="grid-stack-item-content relative p-4 sm:p-6 flex flex-col toss-card">
+                    <div class="flex flex-col flex-1 min-h-0 relative z-10 h-full">
+                        <div class="flex justify-between items-center mb-3 sm:mb-4 pr-1 shrink-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">의견 나누기</h2>
+                            <span id="db-status" class="text-[11px] sm:text-[12px] text-[#8B95A1] bg-[#2C2C2E] px-2 py-1 rounded-[6px]">연결 확인중</span>
+                        </div>
+                        
+                        <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-3 sm:mb-4 pb-1 w-full shrink-0">
+                            <button onclick="window.changeCommentRoom('all')" class="c-tab active whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#3182F6] text-white text-[12px] sm:text-[13px] font-bold" id="c-tab-all">전체 시장</button>
+                            <button onclick="window.changeCommentRoom('BTC')" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold" id="c-tab-BTC">비트코인</button>
+                            <button onclick="window.changeCommentRoom('ETH')" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold" id="c-tab-ETH">이더리움</button>
+                            <button onclick="window.changeCommentRoom('SOL')" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold" id="c-tab-SOL">솔라나</button>
+                            <button onclick="window.changeCommentRoom('SUI')" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold" id="c-tab-SUI">수이</button>
+                        </div>
+
+                        <form id="comment-form" class="flex flex-col gap-2.5 mb-4 sm:mb-6 w-full pb-4 sm:pb-6 border-b border-[#2C2C2E] shrink-0">
+                            <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="닉네임 (자동 저장)" maxlength="15">
+                            <div class="flex gap-2 w-full">
+                                <input type="text" id="comment-input" class="flex-1 bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="자유롭게 의견을 남겨주세요.">
+                                <button type="submit" id="comment-submit" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-[14px] sm:rounded-[16px] text-[13px] sm:text-[15px] font-bold transition-colors whitespace-nowrap shrink-0">등록</button>
+                            </div>
+                        </form>
+
+                        <div id="comments-list" class="flex-1 overflow-y-auto custom-scroll space-y-3 sm:space-y-4 pr-2 min-h-0">
+                            <div class="text-[#8B95A1] py-8 text-center text-[14px]">데이터베이스 연결 대기 중...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 로그인 팝업 -->
+    <div id="login-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-sm border border-[#2C2C2E]">
+            <h3 class="text-xl font-bold text-white mb-2 text-center">관리자 로그인</h3>
+            <p class="text-[#8B95A1] text-xs text-center mb-6">등록된 이메일 계정으로 로그인하세요.</p>
+            <input type="email" id="login-email" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-3 focus:outline-none focus:bg-[#2C2C2E]" placeholder="이메일">
+            <input type="password" id="login-pwd" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-6 focus:outline-none focus:bg-[#2C2C2E]" placeholder="비밀번호">
+            <div class="flex justify-end gap-3">
+                <button onclick="window.closeLoginModal()" class="px-4 py-2 text-[#8B95A1] hover:text-white font-medium transition-colors">닫기</button>
+                <button onclick="window.loginAdmin()" id="btn-login-submit" class="px-5 py-2 bg-green-500 hover:bg-green-600 text-white rounded-[10px] font-bold transition-colors">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 인사이트 에디터 팝업 -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-lg border border-[#2C2C2E]">
+            <h3 class="text-xl font-bold text-white mb-4">인사이트 리포트 발행</h3>
+            <input type="text" id="edit-report-title" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-3 focus:outline-none focus:bg-[#2C2C2E]" placeholder="제목을 입력하세요">
+            <textarea id="edit-report-content" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-4 h-40 resize-none custom-scroll focus:outline-none focus:bg-[#2C2C2E]" placeholder="내용을 입력하세요"></textarea>
+            <div class="flex justify-end gap-3">
+                <button onclick="window.cancelAdminEdit()" class="px-4 py-2 text-[#8B95A1] hover:text-white font-medium transition-colors">취소</button>
+                <button id="save-report-btn" class="px-5 py-2 bg-[#3182F6] hover:bg-blue-600 text-white rounded-[10px] font-bold transition-colors">발행하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제 커스텀 모달 -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-sm border border-[#2C2C2E] text-center">
+            <h3 class="text-lg font-bold text-white mb-2">삭제 확인</h3>
+            <p class="text-[#8B95A1] text-[14px] mb-6">정말로 이 글을 삭제하시겠습니까?</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="window.closeConfirmModal()" class="px-5 py-2.5 bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white rounded-[12px] font-bold transition-colors text-[14px]">취소</button>
+                <button id="confirm-delete-btn" class="px-5 py-2.5 bg-[#F04452] hover:bg-red-600 text-white rounded-[12px] font-bold transition-colors text-[14px]">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyBhJ9gMEGUXzeksFObiH9aL-n8Yg2VSgxA",
+            authDomain: "seongwonnotti-crypto-news.firebaseapp.com",
+            projectId: "seongwonnotti-crypto-news",
+            storageBucket: "seongwonnotti-crypto-news.firebasestorage.app",
+            messagingSenderId: "205067848367",
+            appId: "1:205067848367:web:87c8e84cc4f5c15de5a25a",
+            measurementId: "G-99HFYR2SPV"
+        };
+
+        let app, auth, db;
+        let priceCache = {};
+        let aiData = { news: "", analyst: "", macro: "", sentiment: "", updatedAt: 0 };
+        let isAdminLoggedIn = false;
         
-        onSnapshot(doc(state.db, 'system', 'ai_summary'), (docSnap) => {
-            if (docSnap.exists()) {
-                state.aiData = docSnap.data();
-                const activeTab = document.querySelector('.ai-tab-btn.bg-\\[\\#3182F6\\]') || document.querySelector('.ai-tab-btn');
-                if (activeTab) switchAITab(activeTab.dataset.tab); 
-                if (state.aiData.updatedAt) {
-                    const date = new Date(parseInt(state.aiData.updatedAt));
-                    document.getElementById('ai-time').textContent = `업데이트: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-                }
-            }
-        });
+        window.currentCommentsData = [];
+        window.currentCommentRoom = 'all';
+        window.openedReplies = new Set();
+        window.activeChartSymbol = null;
 
-        onSnapshot(doc(state.db, 'admin', 'special_report'), (docSnap) => {
-            if(docSnap.exists()){
-                const data = docSnap.data();
-                document.getElementById('report-title').textContent = escapeHTML(data.title);
-                document.getElementById('report-content').innerHTML = escapeHTML(data.content).replace(/\n/g, '<br>');
-                document.getElementById('report-date').textContent = escapeHTML(data.date);
-            } else {
-                document.getElementById('report-title').textContent = "등록된 인사이트가 없습니다.";
-                document.getElementById('report-content').textContent = "관리자가 새로운 시장 분석을 준비 중입니다.";
-            }
-        });
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
 
-        const q = query(collection(state.db, 'comments'), orderBy('createdAt', 'desc'));
-        onSnapshot(q, (snapshot) => {
-            const comments = [];
-            snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
-            state.commentsData = comments;
-            renderComments();
-        });
-    }
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-[#3182F6] text-white px-5 py-3 rounded-full shadow-lg font-bold text-[14px] z-[9999] transition-all duration-300 translate-y-10 opacity-0";
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
-    // =========================================================================
-    // 6. 이벤트 리스너 등록 (Event Binding)
-    // =========================================================================
-    function setupEventListeners() {
         const nicknameInput = document.getElementById('nickname-input');
         if(nicknameInput) {
             nicknameInput.addEventListener('blur', (e) => {
@@ -665,325 +347,519 @@
             if(savedNick) nicknameInput.value = savedNick;
         }
 
-        document.getElementById('crypto-cards').addEventListener('click', (e) => {
-            const card = e.target.closest('.coin-card');
-            if(card) toggleChart(card.dataset.symbol, card.dataset.name);
-        });
-        document.getElementById('btn-close-chart').addEventListener('click', closeChart);
-
-        document.getElementById('ai-tabs').addEventListener('click', (e) => {
-            const btn = e.target.closest('.ai-tab-btn');
-            if(btn) switchAITab(btn.dataset.tab);
-        });
-
-        document.getElementById('comment-rooms').addEventListener('click', (e) => {
-            const btn = e.target.closest('.c-tab');
-            if(btn) changeCommentRoom(btn.dataset.room);
-        });
-
-        // 관리자 로그인 모달 제어 및 파이어베이스 인증 처리
-        document.getElementById('btn-admin-login').addEventListener('click', () => {
-            if (state.isAdmin) {
-                showToast("현재 이미 관리자로 로그인되어 있습니다.");
-            } else {
-                document.getElementById('login-modal').classList.remove('hidden');
-                document.getElementById('login-modal').classList.add('flex');
-            }
-        });
-        document.getElementById('btn-close-login').addEventListener('click', () => {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('login-modal').classList.remove('flex');
-        });
-
-        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const submitBtn = document.getElementById('btn-submit-login');
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = '인증 중...';
-
-            try {
-                // 파이어베이스 보안 서버 인증
-                await signInWithEmailAndPassword(state.auth, email, password);
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('login-modal').classList.remove('flex');
-                showToast("관리자 로그인에 성공했습니다!");
-                document.getElementById('login-password').value = '';
-            } catch (error) {
-                showToast("로그인 실패: 이메일이나 비밀번호를 확인해주세요.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '인증 및 로그인';
-            }
-        });
-
-        document.getElementById('btn-logout-admin').addEventListener('click', async () => {
-            try {
-                await signOut(state.auth);
-                await signInAnonymously(state.auth); // 다시 익명 상태로 복귀
-                showToast("로그아웃 되었습니다.");
-            } catch(e) {
-                showToast("로그아웃 실패");
-            }
-        });
-
-        document.getElementById('btn-save-layout').addEventListener('click', saveLayout);
-        document.getElementById('btn-open-report').addEventListener('click', () => {
-            document.getElementById('admin-modal').classList.remove('hidden');
-            document.getElementById('admin-modal').classList.add('flex');
-        });
-        document.getElementById('btn-cancel-report').addEventListener('click', () => {
-            document.getElementById('admin-modal').classList.add('hidden');
-            document.getElementById('admin-modal').classList.remove('flex');
-        });
-        document.getElementById('btn-save-report').addEventListener('click', handleSaveReport);
-
-        document.getElementById('comment-form').addEventListener('submit', handleNewComment);
-
-        document.getElementById('comments-list').addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if(!btn) return;
-            
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            
-            if(action === 'delete') handleDeleteComment(id);
-            if(action === 'toggle-form') handleToggleReplyForm(id);
-            if(action === 'toggle-replies') handleToggleReplies(id, btn);
-            if(action === 'submit-reply') handleSubmitReply(id);
-        });
-    }
-
-    async function handleNewComment(e) {
-        e.preventDefault();
-        if(!state.db || !state.auth) return showToast("DB 연결이 필요합니다.");
-        const inputEl = document.getElementById('comment-input');
-        const text = inputEl.value.trim();
-        if (!text) return;
-        
-        const nickname = document.getElementById('nickname-input').value.trim() || "익명";
-        localStorage.setItem('crypto_nickname', nickname);
-        
-        const submitBtn = document.getElementById('comment-submit');
-        submitBtn.disabled = true; submitBtn.textContent = '...';
-        
-        try {
-            await addDoc(collection(state.db, 'comments'), {
-                text: text, 
-                userId: state.auth.currentUser.uid, 
-                nickname: nickname, 
-                role: state.isAdmin ? 'admin' : 'user', 
-                room: state.currentCommentRoom, 
-                createdAt: Date.now()
-            });
-            inputEl.value = ''; 
-        } catch (error) { showToast("글 작성 실패"); } 
-        finally { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
-    }
-
-    async function handleSubmitReply(parentId) {
-        if(!state.db || !state.auth) return showToast("DB 연결이 필요합니다.");
-        const inputEl = document.getElementById(`reply-input-${parentId}`);
-        const text = inputEl.value.trim();
-        if(!text) return;
-
-        let nick = localStorage.getItem('crypto_nickname');
-        const mainNickInput = document.getElementById('nickname-input');
-        if(!nick && mainNickInput && mainNickInput.value.trim()) {
-            nick = mainNickInput.value.trim();
-            localStorage.setItem('crypto_nickname', nick);
-        }
-        if(!nick) nick = "익명";
-
-        inputEl.disabled = true;
-        try {
-            await addDoc(collection(state.db, 'comments'), {
-                text: text, 
-                userId: state.auth.currentUser.uid, 
-                nickname: nick, 
-                role: state.isAdmin ? 'admin' : 'user', 
-                parentId: parentId, 
-                room: state.currentCommentRoom, 
-                createdAt: Date.now()
-            });
-            inputEl.value = '';
-            handleToggleReplyForm(parentId);
-            state.openedReplies.add(parentId); 
-        } catch (error) { showToast("답글 작성 실패"); } 
-        finally { inputEl.disabled = false; }
-    }
-
-    async function handleDeleteComment(id) {
-        if(!state.db) return;
-        if(confirm("정말로 이 글을 삭제하시겠습니까?")) {
-            try {
-                await deleteDoc(doc(state.db, 'comments', id));
-                showToast("삭제 완료");
-            } catch(e) { showToast("삭제 권한이 없습니다."); }
-        }
-    }
-
-    function handleToggleReplyForm(parentId) {
-        const form = document.getElementById(`reply-form-${parentId}`);
-        if(form) {
-            form.classList.toggle('hidden');
-            if(!form.classList.contains('hidden')) {
-                const container = document.getElementById(`replies-${parentId}`);
-                const btn = document.querySelector(`button[data-action="toggle-replies"][data-id="${parentId}"]`);
-                if(container && container.classList.contains('hidden')) handleToggleReplies(parentId, btn);
-            }
-        }
-    }
-
-    function handleToggleReplies(commentId, btn) {
-        const container = document.getElementById(`replies-${commentId}`);
-        if(container && btn) {
-            if(container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                state.openedReplies.add(commentId);
-                btn.innerHTML = '답글 접기 ▲';
-                btn.classList.replace('text-[#3182F6]', 'text-[#8B95A1]');
-            } else {
-                container.classList.add('hidden');
-                state.openedReplies.delete(commentId);
-                const count = btn.getAttribute('data-count');
-                btn.innerHTML = `답글 ${count}개 보기 ▼`;
-                btn.classList.replace('text-[#8B95A1]', 'text-[#3182F6]');
-            }
-        }
-    }
-
-    async function handleSaveReport() {
-        if(!state.db) return;
-        const titleInput = document.getElementById('edit-report-title').value.trim();
-        const contentInput = document.getElementById('edit-report-content').value.trim();
-        if (!titleInput || !contentInput) { showToast('제목과 내용을 모두 입력해주세요.'); return; }
-        
-        const btn = document.getElementById('btn-save-report');
-        btn.disabled = true; btn.textContent = '발행 중...';
-        
-        try {
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 발행`;
-            await setDoc(doc(state.db, 'admin', 'special_report'), { title: titleInput, content: contentInput, date: dateStr, updatedAt: Date.now() });
-            document.getElementById('admin-modal').classList.add('hidden');
-            document.getElementById('admin-modal').classList.remove('flex');
-            showToast("리포트가 성공적으로 발행되었습니다.");
-        } catch (error) { showToast('발행 실패: 권한이 없습니다.'); } 
-        finally { btn.disabled = false; btn.textContent = '발행하기'; }
-    }
-
-    // =========================================================================
-    // 7. 레이아웃 & 관리자 모드 제어 (Layout & Admin Control)
-    // =========================================================================
-    function enableAdminMode() {
-        const toolbar = document.getElementById('admin-toolbar');
-        toolbar.classList.remove('hidden');
-        toolbar.classList.add('flex');
-        
-        const widgets = document.querySelectorAll('.draggable');
-        widgets.forEach(w => {
-            w.setAttribute('draggable', 'true');
-            if(!w.querySelector('.btn-expand-widget')) {
-                const btn = document.createElement('button');
-                btn.innerHTML = '<i class="fa-solid fa-up-down"></i>';
-                btn.className = "btn-expand-widget absolute top-4 right-4 bg-[#2C2C2E] hover:bg-[#3182F6] text-white w-8 h-8 flex items-center justify-center rounded-full transition-colors z-10 shadow-lg text-[12px]";
-                btn.title = "위젯 세로 자동 확장";
-                w.style.position = 'relative';
-                
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    w.classList.toggle('flex-1');
-                    w.classList.add('flex-auto-transition');
-                };
-                w.appendChild(btn);
-            }
-
-            w.addEventListener('dragstart', () => w.classList.add('dragging'));
-            w.addEventListener('dragend', () => w.classList.remove('dragging'));
-        });
-
-        document.querySelectorAll('#col-left, #col-right').forEach(col => {
-            col.addEventListener('dragover', e => {
-                e.preventDefault();
-                col.classList.add('drag-over', 'rounded-[24px]');
-                const dragging = document.querySelector('.dragging');
-                if(dragging) col.appendChild(dragging);
-            });
-            col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
-            col.addEventListener('drop', () => col.classList.remove('drag-over'));
-        });
-    }
-
-    function disableAdminMode() {
-        const toolbar = document.getElementById('admin-toolbar');
-        toolbar.classList.add('hidden');
-        toolbar.classList.remove('flex');
-
-        const widgets = document.querySelectorAll('.draggable');
-        widgets.forEach(w => {
-            w.setAttribute('draggable', 'false');
-            const expandBtn = w.querySelector('.btn-expand-widget');
-            if(expandBtn) expandBtn.remove();
-        });
-    }
-
-    async function saveLayout() {
-        if(!state.db) return showToast("DB 연동 필요");
-        if (!state.isAdmin) return showToast("관리자 권한이 없습니다.");
-        
-        const layout = {
-            left: Array.from(document.getElementById('col-left').children).map(el => ({id: el.id, expanded: el.classList.contains('flex-1')})),
-            right: Array.from(document.getElementById('col-right').children).map(el => ({id: el.id, expanded: el.classList.contains('flex-1')}))
+        window.openLoginModal = () => {
+            if(isAdminLoggedIn) { showToast("이미 관리자로 로그인되어 있습니다."); return; }
+            document.getElementById('login-modal').classList.replace('hidden', 'flex');
         };
-        try {
-            await setDoc(doc(state.db, 'system', 'layout'), { data: layout });
-            showToast("UI 레이아웃이 영구 저장되었습니다.");
-        } catch(e) { showToast("레이아웃 저장 실패"); }
-    }
-
-    async function loadLayout() {
-        if(!state.db) return;
-        try {
-            const docSnap = await getDoc(doc(state.db, 'system', 'layout'));
-            if (docSnap.exists()) {
-                const layout = docSnap.data().data;
-                const leftCol = document.getElementById('col-left');
-                const rightCol = document.getElementById('col-right');
-                
-                layout.left.forEach(item => { 
-                    const el = document.getElementById(item.id); 
-                    if(el) { leftCol.appendChild(el); if(item.expanded) el.classList.add('flex-1'); }
-                });
-                layout.right.forEach(item => { 
-                    const el = document.getElementById(item.id); 
-                    if(el) { rightCol.appendChild(el); if(item.expanded) el.classList.add('flex-1'); }
-                });
+        window.closeLoginModal = () => {
+            document.getElementById('login-modal').classList.replace('flex', 'hidden');
+        };
+        
+        window.loginAdmin = async () => {
+            const email = document.getElementById('login-email').value.trim();
+            const pwd = document.getElementById('login-pwd').value.trim();
+            if(!email || !pwd) { showToast("이메일과 비밀번호를 입력해주세요."); return; }
+            
+            const btn = document.getElementById('btn-login-submit');
+            btn.disabled = true; btn.textContent = '확인 중...';
+            try {
+                await signInWithEmailAndPassword(auth, email, pwd);
+                showToast("관리자 로그인 성공!");
+                window.closeLoginModal();
+            } catch(e) {
+                showToast("로그인 실패. 계정 정보를 확인하세요.");
+            } finally {
+                btn.disabled = false; btn.textContent = '로그인';
             }
-        } catch(e) { console.log('레이아웃 로드 실패'); }
-    }
+        };
 
-    // =========================================================================
-    // 8. 앱 초기화 (App Initialization)
-    // =========================================================================
-    function initApp() {
+        window.logoutAdmin = async () => {
+            if(!auth) return;
+            try {
+                await signOut(auth);
+                await signInAnonymously(auth);
+                showToast("관리자 모드 종료. 일반 사용자로 전환되었습니다.");
+            } catch(e) {}
+        };
+
+        // 🟢 업계 표준 GridStack 엔진 (자동 빈칸 채우기 & 자유 패킹)
+        let grid = null;
+
+        function initGrid() {
+            if (typeof GridStack === 'undefined') return;
+            grid = GridStack.init({
+                column: 12,
+                cellHeight: 30, // 30px 단위로 초정밀 높이 조절
+                margin: 10,
+                staticGrid: true, // 기본 모드에서는 레이아웃 고정
+                animate: true,
+                float: false, // 💡 핵심: 위젯을 드래그하면 중력처럼 위로 당겨져 빈 공간(gap)을 절대 허용하지 않습니다.
+                disableOneColumnMode: false,
+                oneColumnSize: 768
+            });
+        }
+
+        window.toggleEditMode = () => {
+            if (!grid) return;
+            const isEditing = grid.opts.staticGrid;
+            
+            const btnEdit = document.getElementById('btn-edit-mode');
+            const btnSave = document.getElementById('btn-save-layout');
+            const btnReset = document.getElementById('btn-reset-layout');
+            
+            if(isEditing) {
+                // 편집 켜기
+                grid.setStatic(false);
+                document.body.classList.add('editing-layout');
+                document.body.classList.add('is-editing');
+                btnEdit.innerHTML = '❌ 편집 종료';
+                btnSave.classList.remove('hidden');
+                btnReset.classList.remove('hidden');
+                showToast("✅ 대시보드 편집 켜짐: 위젯을 드래그하여 아무 빈칸에나 던져보세요! 크기 조절은 우측 하단 모서리에서 가능합니다.");
+            } else {
+                // 편집 끄기
+                grid.setStatic(true);
+                document.body.classList.remove('editing-layout');
+                document.body.classList.remove('is-editing');
+                btnEdit.innerHTML = '📐 마그네틱 레이아웃 편집';
+                btnSave.classList.add('hidden');
+                btnReset.classList.add('hidden');
+            }
+        };
+
+        window.resetDefaultLayout = () => {
+            if(!grid) return;
+            // 기본 레이아웃 하드코딩 복구
+            const defaultLayout = [
+                {id: 'widget-prices', x: 0, y: 0, w: 7, h: 14},
+                {id: 'widget-fear', x: 7, y: 0, w: 5, h: 7},
+                {id: 'widget-news', x: 7, y: 7, w: 5, h: 12},
+                {id: 'widget-ai', x: 0, y: 14, w: 7, h: 11},
+                {id: 'widget-insight', x: 0, y: 25, w: 7, h: 10},
+                {id: 'widget-comments', x: 7, y: 19, w: 5, h: 16}
+            ];
+            grid.load(defaultLayout);
+            showToast("기본 정렬로 초기화되었습니다.");
+        };
+
+        window.saveLayout = async () => {
+            if(!db || !isAdminLoggedIn || !grid) return;
+            const layout = grid.save(); // GridStack 엔진이 현재 배치를 자동 추출
+            try {
+                await setDoc(doc(db, 'system', 'layout'), { data: layout });
+                showToast("완벽한 패킹 레이아웃이 영구 저장되었습니다!");
+                window.toggleEditMode(); // 저장 후 편집모드 종료
+            } catch(e) { showToast("레이아웃 저장 실패"); }
+        };
+
+        async function loadLayout() {
+            if(!db || !grid) return;
+            try {
+                const docSnap = await getDoc(doc(db, 'system', 'layout'));
+                if (docSnap.exists()) {
+                    const layout = docSnap.data().data;
+                    grid.load(layout); // 저장된 배치로 위젯들을 자동 이동
+                }
+            } catch(e) {}
+        }
+
+        async function updatePrices() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","SUIUSDT"]');
+                const data = await res.json();
+                data.forEach(coin => {
+                    let symbol = coin.symbol.replace('USDT', '').toLowerCase();
+                    let price = parseFloat(coin.lastPrice);
+                    let changePct = parseFloat(coin.priceChangePercent);
+                    const priceEl = document.getElementById(`price-${symbol}`);
+                    const pctEl = document.getElementById(`pct-${symbol}`);
+                    const cardEl = document.getElementById(`card-${symbol}`);
+                    if(!priceEl || !pctEl || !cardEl) return;
+
+                    let formattedPrice = price < 10 ? price.toFixed(4) : price.toLocaleString('en-US', {maximumFractionDigits:2});
+                    const prevPrice = priceCache[symbol];
+                    if (prevPrice !== undefined && prevPrice !== price) {
+                        cardEl.classList.remove('update-up', 'update-down');
+                        void cardEl.offsetWidth; 
+                        if (price > prevPrice) cardEl.classList.add('update-up');
+                        else if (price < prevPrice) cardEl.classList.add('update-down');
+                    }
+                    priceCache[symbol] = price;
+                    priceEl.innerHTML = `$ ${formattedPrice}`;
+                    pctEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+                    pctEl.style.color = changePct > 0 ? '#F04452' : (changePct < 0 ? '#3182F6' : '#8B95A1');
+                });
+            } catch (e) {}
+        }
+
+        async function updateFearGreed() {
+            try {
+                const res = await fetch('https://api.alternative.me/fng/');
+                const data = await res.json();
+                const value = data.data[0].value;
+                document.getElementById('fg-value').textContent = value;
+                
+                let krClass = '중립'; let color = '#8B95A1'; let icon = 'fa-scale-balanced';
+                if(value <= 25) { krClass = '극단적 공포'; color = '#3182F6'; icon = 'fa-snowflake'; }
+                else if(value <= 45) { krClass = '공포'; color = '#3182F6'; icon = 'fa-cloud-rain'; }
+                else if(value >= 75) { krClass = '극단적 탐욕'; color = '#F04452'; icon = 'fa-fire'; }
+                else if(value >= 55) { krClass = '탐욕'; color = '#F04452'; icon = 'fa-arrow-trend-up'; }
+                
+                document.getElementById('fg-class').textContent = krClass;
+                document.getElementById('fg-class').style.color = color;
+                document.getElementById('fg-value').style.color = color;
+                document.getElementById('fg-ring').style.borderColor = color;
+                document.getElementById('fg-icon').className = `fa-solid ${icon} text-xl sm:text-2xl`;
+                document.getElementById('fg-icon').style.color = color;
+            } catch (e) {}
+        }
+
+        async function fetchNews() {
+            try {
+                const cryptoCompareReq = fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN').then(res => res.json()).then(data => data.Data.slice(0, 15).map(item => ({ title: item.title, url: item.url, source: item.source_info.name, time: item.published_on * 1000 })));
+                const investingReq = fetch('https://api.rss2json.com/v1/api.json?rss_url=https://kr.investing.com/rss/news_301.rss').then(res => res.json()).then(data => (data.items || []).slice(0, 10).map(item => ({ title: item.title, url: item.link, source: 'Investing.com', time: new Date(item.pubDate.replace(/-/g, '/')).getTime() })));
+
+                const results = await Promise.allSettled([cryptoCompareReq, investingReq]);
+                let allNews = [];
+                if(results[0].status === 'fulfilled') allNews = allNews.concat(results[0].value);
+                if(results[1].status === 'fulfilled') allNews = allNews.concat(results[1].value);
+
+                allNews.sort((a, b) => b.time - a.time);
+                const list = document.getElementById('news-list');
+                list.innerHTML = '';
+                allNews.slice(0, 6).forEach(item => {
+                    const date = new Date(item.time);
+                    const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    list.innerHTML += `
+                        <li class="group border-b border-[#2C2C2E] pb-3 last:border-0 last:pb-0">
+                            <a href="${item.url}" target="_blank" class="block">
+                                <div class="text-[14px] text-[#D1D6DB] group-hover:text-white transition-colors line-clamp-2 leading-snug mb-1 word-break">${escapeHTML(item.title)}</div>
+                                <div class="text-[11px] text-[#8B95A1] font-medium tracking-wide">${item.source} • ${timeStr}</div>
+                            </a>
+                        </li>
+                    `;
+                });
+            } catch (e) {}
+        }
+
+        async function initFirebaseApp() {
+            try {
+                app = initializeApp(myFirebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        isAdminLoggedIn = !user.isAnonymous;
+                        if (isAdminLoggedIn) {
+                            document.getElementById('admin-toolbar').classList.replace('hidden', 'flex');
+                        } else {
+                            document.getElementById('admin-toolbar').classList.replace('flex', 'hidden');
+                        }
+                        document.getElementById('db-status').innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> DB ON</span>`;
+                    } else {
+                        signInAnonymously(auth);
+                    }
+                });
+
+                listenToFirebase();
+                initGrid(); // 🚀 GridStack 엔진 시동
+                loadLayout();
+            } catch (error) {
+                document.getElementById('db-status').innerHTML = `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> DB OFF</span>`;
+            }
+        }
+
+        function listenToFirebase() {
+            if(!db) return;
+            onSnapshot(doc(db, 'system', 'ai_summary'), (docSnap) => {
+                if (docSnap.exists()) {
+                    aiData = docSnap.data();
+                    const activeTab = document.querySelector('.tab-btn.bg-\\[\\#3182F6\\]');
+                    if (activeTab) activeTab.click(); 
+                    if (aiData.updatedAt) {
+                        const date = new Date(parseInt(aiData.updatedAt));
+                        document.getElementById('ai-time').textContent = `업데이트: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                    }
+                }
+            });
+
+            onSnapshot(doc(db, 'admin', 'special_report'), (docSnap) => {
+                if(docSnap.exists()){
+                    const data = docSnap.data();
+                    document.getElementById('report-title').textContent = data.title;
+                    document.getElementById('report-content').textContent = data.content;
+                    document.getElementById('report-date').textContent = data.date;
+                }
+            });
+
+            const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                const comments = [];
+                snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
+                window.currentCommentsData = comments;
+                window.renderComments(comments);
+            });
+        }
+
+        const coinIcons = {
+            'BTC': 'https://assets.coingecko.com/coins/images/1/standard/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/standard/ethereum.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/standard/solana.png',
+            'SUI': 'https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png'
+        };
+
+        window.toggleInlineChart = function(symbol, name) {
+            document.getElementById('coin-cards-container').classList.add('hidden');
+            const container = document.getElementById('inline-chart-container');
+            const title = document.getElementById('inline-chart-title');
+            const icon = document.getElementById('inline-chart-icon');
+            const iframe = document.getElementById('inline-tradingview-iframe');
+
+            window.activeChartSymbol = symbol;
+            if (title) title.textContent = `${name} (${symbol}/USDT) 실시간 차트`;
+            if (icon && coinIcons[symbol]) icon.src = coinIcons[symbol];
+            if (iframe) iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=BINANCE%3A${symbol}USDT&interval=15&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=1C1C1E&theme=dark&style=1&timezone=Asia%2FSeoul`;
+            
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+        };
+
+        window.closeInlineChart = function() {
+            const container = document.getElementById('inline-chart-container');
+            const iframe = document.getElementById('inline-tradingview-iframe');
+            if (iframe) iframe.src = '';
+            
+            container.classList.add('hidden');
+            container.classList.remove('flex');
+            document.getElementById('coin-cards-container').classList.remove('hidden');
+            window.activeChartSymbol = null;
+        };
+
+        window.switchTab = function(category) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-[#3182F6]', 'text-white');
+                btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
+            });
+            const activeBtn = document.getElementById(`tab-${category}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
+                activeBtn.classList.add('bg-[#3182F6]', 'text-white');
+            }
+            document.getElementById('ai-text').innerHTML = escapeHTML(aiData[category] || "데이터 없음").replace(/\n/g, '<br>');
+        };
+
+        window.changeCommentRoom = function(room) {
+            window.currentCommentRoom = room;
+            document.querySelectorAll('.c-tab').forEach(btn => {
+                btn.classList.remove('bg-[#3182F6]', 'text-white');
+                btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
+            });
+            const activeTab = document.getElementById(`c-tab-${room}`);
+            if(activeTab) {
+                activeTab.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
+                activeTab.classList.add('bg-[#3182F6]', 'text-white');
+            }
+            if(window.currentCommentsData) window.renderComments(window.currentCommentsData);
+        };
+
+        window.renderComments = function(comments) {
+            const list = document.getElementById('comments-list');
+            const roomComments = comments.filter(c => (c.room || 'all') === window.currentCommentRoom);
+            
+            if (roomComments.length === 0) {
+                 list.innerHTML = `<div class="text-[#8B95A1] py-8 text-center text-[14px]">첫 번째 의견을 남겨주세요.</div>`;
+                 return;
+            }
+
+            const currentUserId = auth?.currentUser?.uid; 
+
+            function countDescendants(parentId) {
+                const children = roomComments.filter(c => c.parentId === parentId);
+                let count = children.length;
+                children.forEach(child => count += countDescendants(child.id));
+                return count;
+            }
+
+            function buildCommentTree(parentId, depth) {
+                const children = roomComments.filter(c => c.parentId === parentId).sort((a, b) => parentId ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
+                if (children.length === 0) return '';
+                let html = '';
+                const containerClass = depth === 0 ? 'mb-4' : (depth === 1 ? 'mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3' : 'mt-2 ml-2 border-l border-dashed border-[#4A4A4C] pl-2');
+
+                children.forEach(c => {
+                    const isMe = c.userId === currentUserId;
+                    const isAdminBadge = c.role === 'admin' ? `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] font-bold ml-1.5">⭐️ 관리자</span>` : '';
+                    const nameColor = (c.role === 'admin') ? 'text-[#3182F6]' : (depth === 0 ? 'text-white' : 'text-[#8B95A1]');
+                    const date = new Date(c.createdAt);
+                    const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    const deleteBtn = (isAdminLoggedIn || isMe) ? `<button onclick="window.openConfirmModal('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 ml-2">삭제</button>` : '';
+                    const bubbleBg = depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
+                    const textSize = depth === 0 ? 'text-[15px]' : 'text-[14px]';
+                    const descCount = countDescendants(c.id);
+
+                    html += `
+                        <div class="flex flex-col ${containerClass}">
+                            <div class="flex items-center space-x-2 mb-1.5">
+                                <span class="text-[13px] font-bold ${nameColor}">${escapeHTML(c.nickname)} ${isAdminBadge} ${isMe && !isAdminBadge ? '<span class="text-[11px] text-[#8B95A1]">(나)</span>' : ''}</span>
+                                <span class="text-[11px] text-[#8B95A1] font-mono">${timeStr}</span>
+                                ${deleteBtn}
+                            </div>
+                            <div class="${textSize} text-[#D1D6DB] word-break leading-relaxed ${bubbleBg} px-4 py-3 rounded-[16px] rounded-tl-[4px] w-fit max-w-[95%] shadow-sm">
+                                ${escapeHTML(c.text).replace(/\n/g, '<br>')}
+                            </div>
+                            <div class="mt-2 ml-2 flex items-center gap-3">
+                                <button onclick="window.toggleReplyForm('${c.id}')" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
+                                ${(descCount > 0) ? `<button onclick="window.toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
+                            </div>
+                            <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
+                                <div class="flex gap-2">
+                                    <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[12px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글 작성...">
+                                    <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[12px] text-[13px] font-bold">등록</button>
+                                </div>
+                            </div>
+                    `;
+                    const childrenHtml = buildCommentTree(c.id, depth + 1);
+                    if (descCount > 0) {
+                        html += `<div id="replies-${c.id}" class="${window.openedReplies.has(c.id) ? '' : 'hidden'}">${childrenHtml}</div>`;
+                    } else {
+                        html += childrenHtml;
+                    }
+                    html += `</div>`;
+                });
+                return html;
+            }
+            list.innerHTML = buildCommentTree(null, 0) || buildCommentTree(undefined, 0); 
+        };
+
+        window.toggleReplies = (commentId) => {
+            const container = document.getElementById(`replies-${commentId}`);
+            const btn = document.getElementById(`toggle-btn-${commentId}`);
+            if(container && btn) {
+                if(container.classList.contains('hidden')) {
+                    container.classList.remove('hidden'); window.openedReplies.add(commentId);
+                    btn.innerHTML = '답글 접기 ▲'; btn.classList.replace('text-[#3182F6]', 'text-[#8B95A1]');
+                } else {
+                    container.classList.add('hidden'); window.openedReplies.delete(commentId);
+                    const count = btn.getAttribute('data-count');
+                    btn.innerHTML = `답글 ${count}개 보기 ▼`; btn.classList.replace('text-[#8B95A1]', 'text-[#3182F6]');
+                }
+            }
+        };
+
+        window.toggleReplyForm = (parentId) => {
+            const form = document.getElementById(`reply-form-${parentId}`);
+            if(form) {
+                form.classList.toggle('hidden');
+                if(!form.classList.contains('hidden')) {
+                    const container = document.getElementById(`replies-${parentId}`);
+                    if(container && container.classList.contains('hidden')) window.toggleReplies(parentId);
+                }
+            }
+        };
+
+        window.submitReply = async (parentId) => {
+            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
+            const inputEl = document.getElementById(`reply-input-${parentId}`);
+            const text = inputEl.value.trim();
+            if(!text) return;
+
+            let nick = localStorage.getItem('crypto_nickname');
+            const mainNickInput = document.getElementById('nickname-input');
+            if(!nick && mainNickInput && mainNickInput.value.trim()) {
+                nick = mainNickInput.value.trim(); localStorage.setItem('crypto_nickname', nick);
+            }
+            if(!nick) nick = "익명";
+
+            inputEl.disabled = true;
+            try {
+                await addDoc(collection(db, 'comments'), {
+                    text: text, userId: auth.currentUser.uid, nickname: nick, role: isAdminLoggedIn ? 'admin' : 'user', 
+                    parentId: parentId, room: window.currentCommentRoom, createdAt: Date.now()
+                });
+                inputEl.value = '';
+                window.toggleReplyForm(parentId);
+                window.openedReplies.add(parentId); 
+            } catch (error) {} 
+            finally { inputEl.disabled = false; }
+        };
+
+        document.getElementById('comment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
+            const inputEl = document.getElementById('comment-input');
+            const text = inputEl.value.trim();
+            if (!text) return;
+            
+            const nickname = document.getElementById('nickname-input').value.trim() || "익명";
+            localStorage.setItem('crypto_nickname', nickname);
+            
+            const submitBtn = document.getElementById('comment-submit');
+            submitBtn.disabled = true; submitBtn.textContent = '...';
+            try {
+                await addDoc(collection(db, 'comments'), {
+                    text: text, userId: auth.currentUser.uid, nickname: nickname, role: isAdminLoggedIn ? 'admin' : 'user', 
+                    room: window.currentCommentRoom, createdAt: Date.now()
+                });
+                inputEl.value = ''; 
+            } catch (error) {} 
+            finally { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+        });
+
+        let deleteTargetId = null;
+        window.openConfirmModal = (id) => {
+            deleteTargetId = id;
+            document.getElementById('confirm-modal').classList.replace('hidden', 'flex');
+        };
+        
+        window.closeConfirmModal = () => {
+            deleteTargetId = null;
+            document.getElementById('confirm-modal').classList.replace('flex', 'hidden');
+        };
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if(!deleteTargetId || !db) return;
+            try {
+                await deleteDoc(doc(db, 'comments', deleteTargetId));
+                showToast("삭제 완료");
+                window.closeConfirmModal();
+            } catch(e) {
+                window.closeConfirmModal();
+            }
+        });
+
+        window.openAdminEdit = () => document.getElementById('admin-modal').classList.replace('hidden', 'flex');
+        window.cancelAdminEdit = () => document.getElementById('admin-modal').classList.replace('flex', 'hidden');
+
+        document.getElementById('save-report-btn').addEventListener('click', async () => {
+            if(!db) return;
+            const titleInput = document.getElementById('edit-report-title').value.trim();
+            const contentInput = document.getElementById('edit-report-content').value.trim();
+            if (!titleInput || !contentInput) { showToast('제목과 내용을 모두 입력해주세요.'); return; }
+            
+            const btn = document.getElementById('save-report-btn');
+            btn.disabled = true; btn.textContent = '발행 중...';
+            try {
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 발행`;
+                await setDoc(doc(db, 'admin', 'special_report'), { title: titleInput, content: contentInput, date: dateStr, updatedAt: Date.now() });
+                window.cancelAdminEdit();
+                showToast("리포트 발행 완료!");
+            } catch (error) {} 
+            finally { btn.disabled = false; btn.textContent = '발행하기'; }
+        });
+
         setInterval(() => {
             const now = new Date();
             document.getElementById('clock').textContent = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
         }, 1000);
         
-        setupEventListeners();
-
         updatePrices(); setInterval(updatePrices, 5000);
         updateFearGreed(); setInterval(updateFearGreed, 300000);
         fetchNews(); setInterval(fetchNews, 60000);
-
         initFirebaseApp();
-    }
 
-    initApp();
-</script>
+    </script>
 </body>
 </html>
