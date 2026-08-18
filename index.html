@@ -84,7 +84,7 @@
         </header>
 
         <!-- 🚀 업계 표준 GridStack 레이아웃 엔진 적용 -->
-        <main class="grid-stack mt-2 sm:mt-4" id="main-grid">
+        <main class="grid-stack mt-2 sm:mt-4 opacity-0 transition-opacity duration-500" id="main-grid">
             
             <!-- 1. 실시간 시세 -->
             <div class="grid-stack-item" gs-id="widget-prices" gs-w="7" gs-h="14" gs-min-w="4" gs-min-h="10">
@@ -439,7 +439,6 @@
                 {id: 'widget-comments', x: 7, y: 19, w: 5, h: 16}
             ];
             grid.load(defaultLayout);
-            showToast("기본 정렬로 초기화되었습니다.");
         };
 
         window.saveLayout = async () => {
@@ -453,14 +452,24 @@
         };
 
         async function loadLayout() {
-            if(!db || !grid) return;
+            if(!grid) {
+                document.getElementById('main-grid').classList.remove('opacity-0');
+                return;
+            }
             try {
-                const docSnap = await getDoc(doc(db, 'system', 'layout'));
-                if (docSnap.exists()) {
-                    const layout = docSnap.data().data;
-                    grid.load(layout); // 저장된 배치로 위젯들을 자동 이동
+                if(db) {
+                    const docSnap = await getDoc(doc(db, 'system', 'layout'));
+                    if (docSnap.exists()) {
+                        const layout = docSnap.data().data;
+                        grid.load(layout); // 저장된 배치로 위젯들을 자동 이동
+                    }
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Layout load error:", e);
+            } finally {
+                // 💡 DB 로드에 성공하든 실패하든 화면은 무조건 보여주도록 보장 (투명 버그 방지)
+                document.getElementById('main-grid').classList.remove('opacity-0');
+            }
         }
 
         async function updatePrices() {
@@ -673,6 +682,7 @@
             }
 
             const currentUserId = auth?.currentUser?.uid; 
+            const currentSavedNick = escapeHTML(localStorage.getItem('crypto_nickname') || "");
 
             function countDescendants(parentId) {
                 const children = roomComments.filter(c => c.parentId === parentId);
@@ -714,9 +724,12 @@
                                 ${(descCount > 0) ? `<button onclick="window.toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
                             </div>
                             <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
-                                <div class="flex gap-2">
-                                    <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[12px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글 작성...">
-                                    <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[12px] text-[13px] font-bold">등록</button>
+                                <div class="flex flex-col gap-2">
+                                    <input type="text" id="reply-nick-${c.id}" class="w-1/2 sm:w-1/3 bg-[#1C1C1E] text-white text-[13px] rounded-[10px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="닉네임" value="${currentSavedNick}" maxlength="15">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[10px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글 작성...">
+                                        <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[10px] text-[13px] font-bold transition-colors shrink-0">등록</button>
+                                    </div>
                                 </div>
                             </div>
                     `;
@@ -765,12 +778,17 @@
             const text = inputEl.value.trim();
             if(!text) return;
 
-            let nick = localStorage.getItem('crypto_nickname');
-            const mainNickInput = document.getElementById('nickname-input');
-            if(!nick && mainNickInput && mainNickInput.value.trim()) {
-                nick = mainNickInput.value.trim(); localStorage.setItem('crypto_nickname', nick);
+            const replyNickInput = document.getElementById(`reply-nick-${parentId}`);
+            let nick = replyNickInput ? replyNickInput.value.trim() : "";
+            
+            if (nick) {
+                localStorage.setItem('crypto_nickname', nick);
+                // 메인 닉네임 인풋도 동기화
+                const mainNickInput = document.getElementById('nickname-input');
+                if(mainNickInput) mainNickInput.value = nick;
+            } else {
+                nick = "익명";
             }
-            if(!nick) nick = "익명";
 
             inputEl.disabled = true;
             try {
