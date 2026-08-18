@@ -314,7 +314,18 @@
         let app, auth, db;
         let priceCache = {};
         let aiData = { news: "", analyst: "", macro: "", sentiment: "", updatedAt: 0 };
+
+        // 관리자 인증 상태
+        // 중요: 댓글 UI는 authReady가 true가 되기 전에는 절대 관리자 UI를 렌더링하지 않습니다.
         let isAdminLoggedIn = false;
+        let authReady = false;
+        let currentAuthUser = null;
+        let commentsUnsubscribe = null;
+        let authInitializationPromise = null;
+
+        // 중요: 실제 관리자 이메일로 변경하세요.
+        // Firestore Rules에서도 같은 이메일을 사용해야 합니다.
+        const ADMIN_EMAIL = 'lilpong42@gmail.com';
         
         window.currentCommentsData = [];
         window.currentCommentRoom = 'all';
@@ -362,11 +373,16 @@
             const btn = document.getElementById('btn-login-submit');
             btn.disabled = true; btn.textContent = '확인 중...';
             try {
+                if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                    showToast('관리자 계정이 아닙니다.');
+                    return;
+                }
+
                 await signInWithEmailAndPassword(auth, email, pwd);
-                showToast("관리자 로그인 성공!");
+                showToast('관리자 로그인 성공!');
                 window.closeLoginModal();
             } catch(e) {
-                showToast("로그인 실패. 계정 정보를 확인하세요.");
+                showToast('로그인 실패. 계정 정보를 확인하세요.');
             } finally {
                 btn.disabled = false; btn.textContent = '로그인';
             }
@@ -544,68 +560,208 @@
             } catch (e) {}
         }
 
+        // ------------------------------------------------------------
+        // Firebase 인증/댓글 초기화
+        // ------------------------------------------------------------
+        function applyAuthState(user) {
+            currentAuthUser = user || null;
+
+            const email = (user?.email || '').trim().toLowerCase();
+            isAdminLoggedIn =
+                !!user &&
+                !user.isAnonymous &&
+                email === ADMIN_EMAIL.toLowerCase();
+
+            authReady = !!user;
+
+            const toolbar = document.getElementById('admin-toolbar');
+            if (toolbar) {
+                toolbar.classList.toggle('hidden', !isAdminLoggedIn);
+                toolbar.classList.toggle('flex', isAdminLoggedIn);
+            }
+
+            const dbStatus = document.getElementById('db-status');
+            if (dbStatus && authReady) {
+                dbStatus.innerHTML =
+                    `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> DB ON</span>`;
+            }
+
+            // 인증 상태가 바뀌면 현재 댓글을 즉시 다시 그립니다.
+            // 여기서만 관리자 삭제 버튼이 결정됩니다.
+            if (window.currentCommentsData) {
+                window.renderComments(window.currentCommentsData);
+            }
+        }
+
+        function waitForAuthenticatedUser() {
+            if (authInitializationPromise) return authInitializationPromise;
+
+            authInitializationPromise = new Promise((resolve, reject) => {
+                let resolved = false;
+                let signingInAnonymously = false;
+
+                onAuthStateChanged(auth, async (user) => {
+                    try {
+                        // Firebase가 초기화된 직후 잠깐 null을 줄 수 있습니다.
+                        // 이때 댓글 listener를 먼저 시작하지 않고 익명 로그인까지 완료시킵니다.
+                        if (!user) {
+                            if (!signingInAnonymously) {
+                                signingInAnonymously = true;
+                                try {
+                                    await signInAnonymously(auth);
+                                } catch (e) {
+                                    console.error('Anonymous auth failed:', e);
+                                    authReady = false;
+                                    const dbStatus = document.getElementById('db-status');
+                                    if (dbStatus) {
+                                        dbStatus.innerHTML =
+                                            `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> AUTH ERROR</span>`;
+                                    }
+                                    if (!resolved) {
+                                        resolved = true;
+                                        reject(e);
+                                    }
+                                }
+                            }
+                            return;
+                        }
+
+                        // 여기부터는 Firebase가 실제 현재 사용자를 확정한 상태입니다.
+                        applyAuthState(user);
+
+                        if (!resolved) {
+                            resolved = true;
+                            resolve(user);
+                        }
+                    } catch (e) {
+                        console.error('Auth state handling error:', e);
+                        if (!resolved) {
+                            resolved = true;
+                            reject(e);
+                        }
+                    }
+                });
+            });
+
+            return authInitializationPromise;
+        }
+
+        function startCommentsListener() {
+            if (!db || commentsUnsubscribe) return;
+
+            const q = query(
+                collection(db, 'comments'),
+                orderBy('createdAt', 'desc')
+            );
+
+            commentsUnsubscribe = onSnapshot(
+                q,
+                (snapshot) => {
+                    const comments = [];
+                    snapshot.forEach((commentDoc) => {
+                        comments.push({
+                            id: commentDoc.id,
+                            ...commentDoc.data()
+                        });
+                    });
+
+                    window.currentCommentsData = comments;
+
+                    // 반드시 authReady 이후에만 렌더링됩니다.
+                    window.renderComments(comments);
+                },
+                (error) => {
+                    console.error('Comments listener error:', error);
+                    const list = document.getElementById('comments-list');
+                    if (list) {
+                        list.innerHTML =
+                            `<div class="text-[#F04452] py-8 text-center text-[14px]">댓글을 불러오지 못했습니다.</div>`;
+                    }
+                }
+            );
+        }
+
+        function listenToFirebase() {
+            if (!db) return;
+
+            onSnapshot(
+                doc(db, 'system', 'ai_summary'),
+                (docSnap) => {
+                    if (docSnap.exists()) {
+                        aiData = docSnap.data();
+
+                        const activeTab = document.querySelector(
+                            '.tab-btn.bg-\\[\\#3182F6\\]'
+                        );
+                        if (activeTab) activeTab.click();
+
+                        if (aiData.updatedAt) {
+                            const date = new Date(parseInt(aiData.updatedAt));
+                            document.getElementById('ai-time').textContent =
+                                `업데이트: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                        }
+                    }
+                },
+                (error) => console.error('AI summary listener error:', error)
+            );
+
+            onSnapshot(
+                doc(db, 'admin', 'special_report'),
+                (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById('report-title').textContent = data.title || '';
+                        document.getElementById('report-content').textContent = data.content || '';
+                        document.getElementById('report-date').textContent = data.date || '';
+                    }
+                },
+                (error) => console.error('Special report listener error:', error)
+            );
+
+            // 핵심 수정:
+            // 댓글 listener는 인증 사용자가 확정된 뒤에만 시작합니다.
+            startCommentsListener();
+        }
+
         async function initFirebaseApp() {
             try {
                 app = initializeApp(myFirebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        isAdminLoggedIn = !user.isAnonymous;
-                        if (isAdminLoggedIn) {
-                            document.getElementById('admin-toolbar').classList.replace('hidden', 'flex');
-                        } else {
-                            document.getElementById('admin-toolbar').classList.replace('flex', 'hidden');
-                        }
-                        document.getElementById('db-status').innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> DB ON</span>`;
-                        
-                        if (window.currentCommentsData && window.currentCommentsData.length > 0) {
-                            window.renderComments(window.currentCommentsData);
-                        }
-                    } else {
-                        signInAnonymously(auth);
-                    }
-                });
+                // 1) Firebase Auth 상태를 먼저 확정합니다.
+                await waitForAuthenticatedUser();
 
+                // 2) 인증이 확정된 뒤에만 데이터 listener를 시작합니다.
                 listenToFirebase();
+
                 initGrid();
                 loadLayout();
+
             } catch (error) {
-                document.getElementById('db-status').innerHTML = `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> DB OFF</span>`;
+                console.error('Firebase init error:', error);
+                authReady = false;
+                isAdminLoggedIn = false;
+                currentAuthUser = null;
+
+                const toolbar = document.getElementById('admin-toolbar');
+                if (toolbar) {
+                    toolbar.classList.add('hidden');
+                    toolbar.classList.remove('flex');
+                }
+
+                const dbStatus = document.getElementById('db-status');
+                if (dbStatus) {
+                    dbStatus.innerHTML =
+                        `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> DB OFF</span>`;
+                }
+
+                const list = document.getElementById('comments-list');
+                if (list) {
+                    list.innerHTML =
+                        `<div class="text-[#F04452] py-8 text-center text-[14px]">인증 연결에 실패했습니다.</div>`;
+                }
             }
-        }
-
-        function listenToFirebase() {
-            if(!db) return;
-            onSnapshot(doc(db, 'system', 'ai_summary'), (docSnap) => {
-                if (docSnap.exists()) {
-                    aiData = docSnap.data();
-                    const activeTab = document.querySelector('.tab-btn.bg-\\[\\#3182F6\\]');
-                    if (activeTab) activeTab.click(); 
-                    if (aiData.updatedAt) {
-                        const date = new Date(parseInt(aiData.updatedAt));
-                        document.getElementById('ai-time').textContent = `업데이트: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-                    }
-                }
-            });
-
-            onSnapshot(doc(db, 'admin', 'special_report'), (docSnap) => {
-                if(docSnap.exists()){
-                    const data = docSnap.data();
-                    document.getElementById('report-title').textContent = data.title;
-                    document.getElementById('report-content').textContent = data.content;
-                    document.getElementById('report-date').textContent = data.date;
-                }
-            });
-
-            const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
-            onSnapshot(q, (snapshot) => {
-                const comments = [];
-                snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
-                window.currentCommentsData = comments;
-                window.renderComments(comments);
-            });
         }
 
         const coinIcons = {
@@ -671,78 +827,165 @@
 
         window.renderComments = function(comments) {
             const list = document.getElementById('comments-list');
-            const roomComments = comments.filter(c => (c.room || 'all') === window.currentCommentRoom);
-            
-            if (roomComments.length === 0) {
-                 list.innerHTML = `<div class="text-[#8B95A1] py-8 text-center text-[14px]">첫 번째 의견을 남겨주세요.</div>`;
-                 return;
+            if (!list) return;
+
+            // 인증 상태가 확정되기 전에는 어떤 댓글도 관리자 UI와 함께 렌더링하지 않습니다.
+            if (!authReady || !currentAuthUser) {
+                list.innerHTML =
+                    `<div class="text-[#8B95A1] py-8 text-center text-[14px]">사용자 인증 확인 중...</div>`;
+                return;
             }
 
-            const currentUserId = auth?.currentUser?.uid; 
-            const currentSavedNick = escapeHTML(localStorage.getItem('crypto_nickname') || "");
+            const roomComments = comments.filter(
+                c => (c.room || 'all') === window.currentCommentRoom
+            );
+
+            if (roomComments.length === 0) {
+                list.innerHTML =
+                    `<div class="text-[#8B95A1] py-8 text-center text-[14px]">첫 번째 의견을 남겨주세요.</div>`;
+                return;
+            }
+
+            // render 시점의 auth 상태를 한 번 스냅샷으로 잡습니다.
+            const userAtRender = currentAuthUser;
+            const adminAtRender = isAdminLoggedIn;
+            const currentUserId = userAtRender.uid;
+            const currentSavedNick = escapeHTML(
+                localStorage.getItem('crypto_nickname') || ""
+            );
 
             function countDescendants(parentId) {
                 const children = roomComments.filter(c => c.parentId === parentId);
                 let count = children.length;
-                children.forEach(child => count += countDescendants(child.id));
+
+                children.forEach(child => {
+                    count += countDescendants(child.id);
+                });
+
                 return count;
             }
 
             function buildCommentTree(parentId, depth) {
-                const children = roomComments.filter(c => c.parentId === parentId).sort((a, b) => parentId ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
+                const children = roomComments
+                    .filter(c => c.parentId === parentId)
+                    .sort((a, b) =>
+                        parentId
+                            ? a.createdAt - b.createdAt
+                            : b.createdAt - a.createdAt
+                    );
+
                 if (children.length === 0) return '';
+
                 let html = '';
-                const containerClass = depth === 0 ? 'mb-4' : (depth === 1 ? 'mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3' : 'mt-2 ml-2 border-l border-dashed border-[#4A4A4C] pl-2');
+
+                const containerClass =
+                    depth === 0
+                        ? 'mb-4'
+                        : (depth === 1
+                            ? 'mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3'
+                            : 'mt-2 ml-2 border-l border-dashed border-[#4A4A4C] pl-2');
 
                 children.forEach(c => {
                     const isMe = c.userId === currentUserId;
-                    const isAdminBadge = c.role === 'admin' ? `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] font-bold ml-1.5">⭐️ 관리자</span>` : '';
-                    const nameColor = (c.role === 'admin') ? 'text-[#3182F6]' : (depth === 0 ? 'text-white' : 'text-[#8B95A1]');
+
+                    const isAdminBadge =
+                        c.role === 'admin'
+                            ? `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] font-bold ml-1.5">⭐️ 관리자</span>`
+                            : '';
+
+                    const nameColor =
+                        c.role === 'admin'
+                            ? 'text-[#3182F6]'
+                            : (depth === 0 ? 'text-white' : 'text-[#8B95A1]');
+
                     const date = new Date(c.createdAt);
-                    const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                    
-                    // 수정됨: 오직 관리자(isAdminLoggedIn)만 삭제 버튼을 볼 수 있도록 isMe 제거
-                    const deleteBtn = isAdminLoggedIn ? `<button onclick="window.openConfirmModal('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 ml-2">삭제</button>` : '';
-                    const bubbleBg = depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
-                    const textSize = depth === 0 ? 'text-[15px]' : 'text-[14px]';
+                    const timeStr =
+                        `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ` +
+                        `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                    // 삭제 버튼은 "렌더 시점에 확정된 현재 Auth 사용자"가
+                    // 실제 관리자 이메일 계정일 때만 생성합니다.
+                    const deleteBtn =
+                        adminAtRender &&
+                        !userAtRender.isAnonymous &&
+                        (userAtRender.email || '').trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
+                            ? `<button onclick="window.openConfirmModal('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 ml-2">삭제</button>`
+                            : '';
+
+                    const bubbleBg =
+                        depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
+
+                    const textSize =
+                        depth === 0 ? 'text-[15px]' : 'text-[14px]';
+
                     const descCount = countDescendants(c.id);
 
                     html += `
                         <div class="flex flex-col ${containerClass}">
                             <div class="flex items-center space-x-2 mb-1.5">
-                                <span class="text-[13px] font-bold ${nameColor}">${escapeHTML(c.nickname)} ${isAdminBadge} ${isMe && !isAdminBadge ? '<span class="text-[11px] text-[#8B95A1]">(나)</span>' : ''}</span>
+                                <span class="text-[13px] font-bold ${nameColor}">
+                                    ${escapeHTML(c.nickname)} ${isAdminBadge}
+                                    ${isMe && !isAdminBadge ? '<span class="text-[11px] text-[#8B95A1]">(나)</span>' : ''}
+                                </span>
                                 <span class="text-[11px] text-[#8B95A1] font-mono">${timeStr}</span>
                                 ${deleteBtn}
                             </div>
+
                             <div class="${textSize} text-[#D1D6DB] word-break leading-relaxed ${bubbleBg} px-4 py-3 rounded-[16px] rounded-tl-[4px] w-fit max-w-[95%] shadow-sm">
                                 ${escapeHTML(c.text).replace(/\n/g, '<br>')}
                             </div>
+
                             <div class="mt-2 ml-2 flex items-center gap-3">
                                 <button onclick="window.toggleReplyForm('${c.id}')" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
-                                ${(descCount > 0) ? `<button onclick="window.toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
+                                ${descCount > 0
+                                    ? `<button onclick="window.toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>`
+                                    : ''}
                             </div>
-                            <!-- 수정됨: 대댓글 작성 폼 레이아웃을 w-full 및 위아래 분리형으로 수정하여 메인 폼과 동일한 느낌으로 명확화 -->
+
                             <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
                                 <div class="flex flex-col gap-2.5 w-full">
-                                    <input type="text" id="reply-nick-${c.id}" class="w-full bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all" placeholder="닉네임 (대댓글용)" value="${currentSavedNick}" maxlength="15">
+                                    <input
+                                        type="text"
+                                        id="reply-nick-${c.id}"
+                                        class="w-full bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all"
+                                        placeholder="닉네임 (대댓글용)"
+                                        value="${currentSavedNick}"
+                                        maxlength="15"
+                                    >
                                     <div class="flex gap-2 w-full">
-                                        <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all" placeholder="답글 내용을 입력하세요...">
+                                        <input
+                                            type="text"
+                                            id="reply-input-${c.id}"
+                                            class="flex-1 bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all"
+                                            placeholder="답글 내용을 입력하세요..."
+                                        >
                                         <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[10px] sm:rounded-[12px] text-[13px] sm:text-[14px] font-bold transition-colors shrink-0">등록</button>
                                     </div>
                                 </div>
                             </div>
                     `;
+
                     const childrenHtml = buildCommentTree(c.id, depth + 1);
+
                     if (descCount > 0) {
-                        html += `<div id="replies-${c.id}" class="${window.openedReplies.has(c.id) ? '' : 'hidden'}">${childrenHtml}</div>`;
+                        html += `
+                            <div id="replies-${c.id}" class="${window.openedReplies.has(c.id) ? '' : 'hidden'}">
+                                ${childrenHtml}
+                            </div>
+                        `;
                     } else {
                         html += childrenHtml;
                     }
+
                     html += `</div>`;
                 });
+
                 return html;
             }
-            list.innerHTML = buildCommentTree(null, 0) || buildCommentTree(undefined, 0); 
+
+            list.innerHTML =
+                buildCommentTree(null, 0) ||
+                buildCommentTree(undefined, 0);
         };
 
         window.toggleReplies = (commentId) => {
@@ -772,7 +1015,9 @@
         };
 
         window.submitReply = async (parentId) => {
-            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
+            if(!db || !auth || !authReady || !currentAuthUser) {
+                return showToast("사용자 인증이 완료되지 않았습니다.");
+            }
             const inputEl = document.getElementById(`reply-input-${parentId}`);
             const text = inputEl.value.trim();
             if(!text) return;
@@ -797,13 +1042,19 @@
                 inputEl.value = '';
                 window.toggleReplyForm(parentId);
                 window.openedReplies.add(parentId); 
-            } catch (error) {} 
-            finally { inputEl.disabled = false; }
+            } catch (error) {
+                console.error('Reply submit error:', error);
+                showToast('답글 등록에 실패했습니다.');
+            } finally {
+                inputEl.disabled = false;
+            }
         };
 
         document.getElementById('comment-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
+            if(!db || !auth || !authReady || !currentAuthUser) {
+                return showToast("사용자 인증이 완료되지 않았습니다.");
+            }
             const inputEl = document.getElementById('comment-input');
             const text = inputEl.value.trim();
             if (!text) return;
@@ -819,12 +1070,29 @@
                     room: window.currentCommentRoom, createdAt: Date.now()
                 });
                 inputEl.value = ''; 
-            } catch (error) {} 
-            finally { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+            } catch (error) {
+                console.error('Comment submit error:', error);
+                showToast('댓글 등록에 실패했습니다.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '등록';
+            }
         });
 
         let deleteTargetId = null;
         window.openConfirmModal = (id) => {
+            // 브라우저에서 임의로 함수를 호출해도 관리자만 삭제 확인창을 열 수 있도록 1차 방어
+            if (
+                !authReady ||
+                !currentAuthUser ||
+                currentAuthUser.isAnonymous ||
+                !isAdminLoggedIn ||
+                (currentAuthUser.email || '').trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+            ) {
+                showToast('관리자만 삭제할 수 있습니다.');
+                return;
+            }
+
             deleteTargetId = id;
             document.getElementById('confirm-modal').classList.replace('hidden', 'flex');
         };
@@ -835,12 +1103,30 @@
         };
 
         document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-            if(!deleteTargetId || !db) return;
-            try {
-                await deleteDoc(doc(db, 'comments', deleteTargetId));
-                showToast("삭제 완료");
+            // 프론트엔드 2차 방어. 실제 최종 보안은 Firestore Rules가 담당합니다.
+            if (
+                !deleteTargetId ||
+                !db ||
+                !authReady ||
+                !currentAuthUser ||
+                currentAuthUser.isAnonymous ||
+                !isAdminLoggedIn ||
+                (currentAuthUser.email || '').trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+            ) {
+                showToast('관리자만 삭제할 수 있습니다.');
                 window.closeConfirmModal();
-            } catch(e) {
+                return;
+            }
+
+            const targetId = deleteTargetId;
+
+            try {
+                await deleteDoc(doc(db, 'comments', targetId));
+                showToast('삭제 완료');
+                window.closeConfirmModal();
+            } catch (e) {
+                console.error('Comment delete error:', e);
+                showToast('삭제 권한이 없습니다.');
                 window.closeConfirmModal();
             }
         });
@@ -862,8 +1148,13 @@
                 await setDoc(doc(db, 'admin', 'special_report'), { title: titleInput, content: contentInput, date: dateStr, updatedAt: Date.now() });
                 window.cancelAdminEdit();
                 showToast("리포트 발행 완료!");
-            } catch (error) {} 
-            finally { btn.disabled = false; btn.textContent = '발행하기'; }
+            } catch (error) {
+                console.error('Report publish error:', error);
+                showToast('리포트 발행에 실패했습니다.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '발행하기';
+            }
         });
 
         setInterval(() => {
