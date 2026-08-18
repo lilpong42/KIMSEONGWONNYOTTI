@@ -3,821 +3,596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SEONGWON COMPANY | Crypto Terminal</title>
-    <!-- Tailwind CSS -->
+    <title>SEONGWONNOTTI | Crypto Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pretendard Font -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-    <!-- TradingView Script -->
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <!-- Sortable JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <style>
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background-color: #121212;
-            color: #F2F4F6;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* 둥글고 부드러운 토스식 카드 스타일 */
-        .toss-card {
-            background-color: #1C1C1E;
-            border-radius: 24px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, flex 0.3s ease;
-        }
-        
-        /* 위젯 박스 기본 속성 */
-        .widget-box {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: max-content;
-        }
-
-        /* 정형화 꽉 채우기 속성 */
-        .widget-expanded {
-            flex: 1 1 0%;
-            height: 100%;
-        }
-
-        /* 드래그 시 고스트(그림자) 스타일 */
-        .sortable-ghost {
-            opacity: 0.4;
-            background-color: #2C2C2E;
-            border: 2px dashed #3182F6;
-            border-radius: 24px;
-        }
-        .sortable-drag {
-            cursor: grabbing !important;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-        /* 토스 스타일 탭 버튼 */
-        .toss-tab {
-            padding: 10px 20px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.2s ease;
-            color: #8B95A1;
-            background-color: #2C2C2E;
-        }
-        .toss-tab.active {
-            background-color: #3182F6;
-            color: #FFFFFF;
-        }
-
-        /* 가격 변동 깜빡임 효과 */
-        @keyframes flash-up { 0% { background-color: rgba(49, 130, 246, 0.2); } 100% { background-color: #1C1C1E; } }
-        @keyframes flash-down { 0% { background-color: rgba(240, 68, 82, 0.2); } 100% { background-color: #1C1C1E; } }
-        .update-up { animation: flash-up 0.8s ease-out; }
-        .update-down { animation: flash-down 0.8s ease-out; }
-
-        /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #2C2C2E; border-radius: 10px; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #121212; color: #FFFFFF; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .toss-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .toss-card:hover { transform: translateY(-2px); }
+        .flex-auto-transition { transition: flex 0.3s ease-in-out; }
 
-        /* UI 편집 모드 활성화 시 테두리 점멸 효과 */
-        .edit-mode-active .widget-box {
-            border: 1px dashed #4A4A4C;
+        @keyframes flashUp {
+            0% { background-color: rgba(240, 68, 82, 0.2); transform: scale(1.02); }
+            100% { background-color: transparent; transform: scale(1); }
         }
+        @keyframes flashDown {
+            0% { background-color: rgba(49, 130, 246, 0.2); transform: scale(1.02); }
+            100% { background-color: transparent; transform: scale(1); }
+        }
+        .update-up { animation: flashUp 0.8s ease-out; color: #F04452 !important; }
+        .update-down { animation: flashDown 0.8s ease-out; color: #3182F6 !important; }
+
+        .draggable { cursor: grab; }
+        .draggable:active { cursor: grabbing; opacity: 0.8; }
+        .drag-over { border: 2px dashed #3182F6; background-color: rgba(49, 130, 246, 0.05); }
+
+        .c-tab { transition: all 0.2s ease; }
+        .word-break { word-break: break-word; }
     </style>
 </head>
-<body class="flex flex-col items-center pb-24">
-
-    <!-- 메인 컨테이너 (1200px 제한) -->
-    <div class="w-full max-w-[1200px] px-4 md:px-8 pt-8">
-        
-        <!-- 헤더 -->
+<body class="min-h-screen p-4 md:p-8 bg-[#121212]">
+    <div class="max-w-[1200px] mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">SEONGWON<br>COMPANY</h1>
-            </div>
-            <!-- ★ 시크릿 관리자 버튼: 이 버튼을 클릭하면 비밀번호 창이 뜹니다. -->
-            <div onclick="showAdminModal()" class="flex items-center space-x-2 bg-[#2C2C2E] px-4 py-2 rounded-full shadow-lg cursor-pointer hover:bg-[#3A3A3C] transition-colors" title="시스템 상태 (클릭 시 비밀 접속)">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3182F6] opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#3182F6]"></span>
-                </span>
-                <span class="text-[14px] font-bold text-[#F2F4F6]">Live Terminal</span>
+                <!-- 🟢 관리자 모드 진입 시크릿 버튼 (비밀번호: 4242) -->
+                <div class="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onclick="promptAdminLogin()">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs font-semibold tracking-wider text-green-500">LIVE TERMINAL</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">SEONGWONNOTTI</h1>
             </div>
         </header>
 
-        <!-- 관심 암호화폐 -->
-        <h2 class="text-[18px] md:text-xl font-bold text-white mb-4 px-1">관심 암호화폐</h2>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4" id="crypto-grid">
-            <!-- 코인 카드 렌더링 -->
-        </div>
-
-        <!-- 트레이딩뷰 차트 (코인 클릭 시 스르륵 열림) -->
-        <div id="chart-container" class="hidden mb-8 toss-card p-2 w-full h-[500px] relative mt-2 shadow-2xl">
-            <div class="flex justify-between items-center p-3 mb-1 border-b border-[#2C2C2E]/50">
-                <span id="chart-title" class="font-bold text-white pl-2 text-[16px]">차트</span>
-                <button onclick="closeChart()" class="bg-[#2C2C2E] text-[#8B95A1] hover:text-white rounded-full p-1.5 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div id="tradingview-widget-container" class="w-full h-[430px] rounded-b-[16px] overflow-hidden"></div>
-        </div>
-
-        <!-- 메인 대시보드 (반응형 2단 그리드 - 높이 꽉 채우기 적용: items-stretch) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-stretch" id="main-layout-grid">
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" id="main-grid">
             
-            <!-- 좌측 메인 컬럼 (60% 비율) -->
-            <div id="left-column" class="lg:col-span-7 flex flex-col gap-6 w-full h-full min-h-[300px]">
-                
-                <!-- AI 브리핑 위젯 -->
-                <div id="widget-ai" class="widget-box toss-card p-6 md:p-8 relative group">
-                    <!-- 관리자 조작 툴바 -->
-                    <div class="admin-controls hidden absolute top-4 right-4 flex gap-2 z-10">
-                        <button onclick="toggleExpand('widget-ai')" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="높이 꽉 채우기">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                        </button>
-                        <div class="admin-drag-handle cursor-grab active:cursor-grabbing bg-[#3182F6] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="드래그 이동">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </div>
-                    </div>
-
+            <!-- 왼쪽 컬럼 (넓은 영역: 시세, AI, 인사이트) -->
+            <div class="lg:col-span-7 flex flex-col gap-6 items-stretch" id="col-left">
+                <!-- 실시간 시세 -->
+                <section id="widget-prices" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
                     <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
-                            <span class="text-[12px] font-extrabold px-2 py-0.5 bg-[#3182F6]/20 text-[#3182F6] rounded-md">BOT</span>
+                        <h2 class="text-xl font-bold text-white tracking-tight">실시간 시세</h2>
+                        <span class="text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div id="card-btc" class="bg-[#24272F] p-5 rounded-[20px] transition-colors duration-300">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[22px] h-[22px] rounded-full" alt="BTC">
+                                <span class="font-bold text-[#D1D6DB] text-[15px]">비트코인</span>
+                            </div>
+                            <div class="text-2xl font-bold text-white tracking-tight" id="price-btc">$ --</div>
+                            <div class="text-[14px] font-semibold mt-1" id="pct-btc">--%</div>
                         </div>
-                        <div id="ai-report-time" class="text-[12px] text-[#8B95A1] font-mono">수신 대기 중...</div>
-                    </div>
-                    
-                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-6 pb-1 w-full">
-                        <button onclick="changeAITab('news')" id="tab-news" class="toss-tab active whitespace-nowrap shrink-0">주요 뉴스</button>
-                        <button onclick="changeAITab('analyst')" id="tab-analyst" class="toss-tab whitespace-nowrap shrink-0">애널리스트</button>
-                        <button onclick="changeAITab('macro')" id="tab-macro" class="toss-tab whitespace-nowrap shrink-0">거시 경제</button>
-                        <button onclick="changeAITab('sentiment')" id="tab-sentiment" class="toss-tab whitespace-nowrap shrink-0">시장 심리</button>
-                    </div>
-
-                    <div class="bg-[#24272F] p-5 md:p-6 rounded-[20px] w-full flex-1 flex flex-col">
-                        <div id="ai-report-content" class="text-[#D1D6DB] text-[16px] md:text-[17px] leading-[1.7] whitespace-pre-wrap word-break break-words flex-1">구글 서버에서 데이터를 동기화하고 있습니다...</div>
-                    </div>
-                </div>
-
-                <!-- COMPANY INSIGHT 위젯 -->
-                <div id="widget-insight" class="widget-box toss-card p-6 md:p-8 relative group">
-                    <div class="admin-controls hidden absolute top-4 right-4 flex gap-2 z-10">
-                        <button onclick="toggleExpand('widget-insight')" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="높이 꽉 채우기">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                        </button>
-                        <div class="admin-drag-handle cursor-grab active:cursor-grabbing bg-[#3182F6] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="드래그 이동">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <div id="card-eth" class="bg-[#24272F] p-5 rounded-[20px] transition-colors duration-300">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[22px] h-[22px] rounded-full" alt="ETH">
+                                <span class="font-bold text-[#D1D6DB] text-[15px]">이더리움</span>
+                            </div>
+                            <div class="text-2xl font-bold text-white tracking-tight" id="price-eth">$ --</div>
+                            <div class="text-[14px] font-semibold mt-1" id="pct-eth">--%</div>
+                        </div>
+                        <div id="card-sol" class="bg-[#24272F] p-5 rounded-[20px] transition-colors duration-300">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[22px] h-[22px] rounded-full" alt="SOL">
+                                <span class="font-bold text-[#D1D6DB] text-[15px]">솔라나</span>
+                            </div>
+                            <div class="text-2xl font-bold text-white tracking-tight" id="price-sol">$ --</div>
+                            <div class="text-[14px] font-semibold mt-1" id="pct-sol">--%</div>
+                        </div>
+                        <div id="card-sui" class="bg-[#24272F] p-5 rounded-[20px] transition-colors duration-300">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[22px] h-[22px] rounded-full" alt="SUI">
+                                <span class="font-bold text-[#D1D6DB] text-[15px]">수이</span>
+                            </div>
+                            <div class="text-2xl font-bold text-white tracking-tight" id="price-sui">$ --</div>
+                            <div class="text-[14px] font-semibold mt-1" id="pct-sui">--%</div>
                         </div>
                     </div>
+                </section>
 
+                <!-- AI 자동 브리핑 -->
+                <section id="widget-ai" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
-                        <!-- 톱니바퀴 삭제됨 (비밀번호 버튼은 최상단 헤더로 이동) -->
-                    </div>
-                    
-                    <div id="report-view-mode" class="block w-full flex-1">
-                        <h3 id="display-report-title" class="text-2xl font-extrabold text-white mb-2 leading-tight break-words">데이터 로딩 중...</h3>
-                        <div id="display-report-date" class="text-[14px] text-[#8B95A1] mb-6 font-mono">-</div>
-                        <div id="display-report-content" class="text-[#D1D6DB] text-[16px] md:text-[17px] leading-[1.8] whitespace-pre-wrap break-words"></div>
-                    </div>
-
-                    <div id="report-edit-mode" class="hidden flex-col gap-4 w-full flex-1">
-                        <input type="text" id="edit-report-title" class="w-full bg-[#24272F] text-white rounded-[16px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#3182F6] font-bold text-lg" placeholder="리포트 제목">
-                        <textarea id="edit-report-content" class="w-full bg-[#24272F] text-white rounded-[16px] px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#3182F6] min-h-[250px] flex-1 resize-none text-[16px]" placeholder="내용을 입력하세요"></textarea>
-                        <div class="flex justify-end gap-3 mt-2">
-                            <button onclick="cancelAdminEdit()" class="px-6 py-3.5 bg-[#2C2C2E] text-white rounded-[14px] font-semibold hover:bg-[#3A3A3C]">취소</button>
-                            <button id="save-report-btn" class="px-6 py-3.5 bg-[#3182F6] hover:bg-[#1B64DA] text-white font-semibold rounded-[14px]">발행하기</button>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
+                            <span class="px-2 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[11px] font-bold rounded-[6px]">Gemini 3.7</span>
                         </div>
                     </div>
-                </div>
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-5 pb-2">
+                        <button onclick="switchTab('news')" id="tab-news" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#3182F6] text-white text-[14px] font-bold transition-colors">🔥 헤드라인</button>
+                        <button onclick="switchTab('analyst')" id="tab-analyst" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">💡 전문가 의견</button>
+                        <button onclick="switchTab('macro')" id="tab-macro" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">🌍 거시경제</button>
+                        <button onclick="switchTab('sentiment')" id="tab-sentiment" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">📊 투자 심리</button>
+                    </div>
+                    <div id="ai-content-box" class="bg-[#24272F] rounded-[20px] p-5 min-h-[140px]">
+                        <p id="ai-text" class="text-[#D1D6DB] leading-relaxed text-[15px] font-medium tracking-wide">데이터베이스 연결 대기 중...</p>
+                        <p id="ai-time" class="text-[12px] text-[#8B95A1] mt-4 font-mono"></p>
+                    </div>
+                </section>
+
+                <!-- 컴퍼니 인사이트 -->
+                <section id="widget-insight" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
+                    </div>
+                    <div class="bg-[#24272F] rounded-[20px] p-6">
+                        <h3 id="report-title" class="text-lg font-bold text-white mb-3">연결 대기 중...</h3>
+                        <p id="report-content" class="text-[#D1D6DB] text-[15px] leading-relaxed mb-4 whitespace-pre-wrap">데이터를 불러오는 중입니다.</p>
+                        <div class="flex justify-between items-center text-[12px] text-[#8B95A1] font-mono">
+                            <span id="report-date">--</span>
+                        </div>
+                    </div>
+                </section>
             </div>
 
-            <!-- 우측 사이드바 컬럼 (40% 비율) -->
-            <div id="right-column" class="lg:col-span-5 flex flex-col gap-6 w-full h-full min-h-[300px]">
+            <!-- 오른쪽 컬럼 (좁은 영역: 심리, 뉴스, 댓글) -->
+            <div class="lg:col-span-5 flex flex-col gap-6 items-stretch" id="col-right">
                 
-                <!-- 시장 심리 지수 위젯 -->
-                <div id="widget-fng" class="widget-box toss-card p-6 relative group">
-                    <div class="admin-controls hidden absolute top-4 right-4 flex gap-2 z-10">
-                        <button onclick="toggleExpand('widget-fng')" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="높이 꽉 채우기">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                        </button>
-                        <div class="admin-drag-handle cursor-grab active:cursor-grabbing bg-[#3182F6] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="드래그 이동">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <!-- 시장 심리 (Fear & Greed) -->
+                <section id="widget-fear" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <h2 class="text-xl font-bold text-white tracking-tight mb-4">시장 심리 (Fear & Greed)</h2>
+                    <div class="flex items-center justify-between bg-[#24272F] rounded-[20px] p-5">
+                        <div class="flex flex-col">
+                            <span id="fg-value" class="text-4xl font-extrabold text-white mb-1">--</span>
+                            <span id="fg-class" class="text-[14px] font-bold text-[#8B95A1]">분석중</span>
+                        </div>
+                        <div class="w-16 h-16 rounded-full border-4 border-[#2C2C2E] flex items-center justify-center" id="fg-ring">
+                            <i class="fa-solid fa-fire text-2xl text-[#8B95A1]" id="fg-icon"></i>
                         </div>
                     </div>
+                </section>
 
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-[18px] md:text-xl font-bold text-white mb-1 tracking-tight">시장 심리 지수</h3>
-                            <p class="text-[13px] text-[#8B95A1]">Fear & Greed (일일 갱신)</p>
-                        </div>
-                        <span id="fng-value" class="text-3xl font-extrabold text-white font-mono">0</span>
+                <!-- 실시간 속보 -->
+                <section id="widget-news" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-5">
+                        <h2 class="text-xl font-bold text-white tracking-tight">실시간 속보</h2>
+                        <span class="text-[12px] px-2 py-1 bg-[#2C2C2E] text-[#8B95A1] rounded-[6px]">Auto</span>
                     </div>
-                    <div class="flex flex-col w-full mt-2 flex-1 justify-end">
-                        <div class="flex justify-between w-full items-baseline mb-3">
-                            <span id="fng-text" class="text-[15px] font-bold text-[#8B95A1]">분석중</span>
-                        </div>
-                        <div class="w-full h-3.5 bg-[#2C2C2E] rounded-full overflow-hidden">
-                            <div id="fng-bar" class="h-full w-0 transition-all duration-1000 ease-out rounded-full" style="background-color: #8B95A1;"></div>
-                        </div>
-                    </div>
-                </div>
+                    <ul id="news-list" class="space-y-4">
+                        <li class="text-[#8B95A1] text-[14px] text-center py-4">뉴스를 불러오는 중입니다... <i class="fa-solid fa-spinner fa-spin ml-1"></i></li>
+                    </ul>
+                </section>
 
-                <!-- 실시간 뉴스 위젯 -->
-                <div id="widget-news" class="widget-box toss-card p-6 relative group flex-1">
-                    <div class="admin-controls hidden absolute top-4 right-4 flex gap-2 z-10">
-                        <button onclick="toggleExpand('widget-news')" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="높이 꽉 채우기">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                        </button>
-                        <div class="admin-drag-handle cursor-grab active:cursor-grabbing bg-[#3182F6] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="드래그 이동">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </div>
-                    </div>
-
-                    <h2 class="text-[18px] md:text-xl font-bold text-white mb-4 tracking-tight">실시간 속보 <span class="text-[12px] text-[#F04452] font-extrabold ml-1 animate-pulse">LIVE</span></h2>
-                    
-                    <div id="news-container" class="flex flex-col gap-1 overflow-y-auto pr-1 hide-scrollbar h-0 flex-1 min-h-[250px]">
-                        <div class="py-10 flex flex-col items-center justify-center">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3182F6] mb-3"></div>
-                            <div class="text-[#8B95A1] text-[14px]">뉴스를 융합하는 중입니다...</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 커뮤니티(댓글) 위젯 -->
-                <div id="widget-comments" class="widget-box toss-card p-6 relative group flex-1">
-                    <div class="admin-controls hidden absolute top-4 right-4 flex gap-2 z-10">
-                        <button onclick="toggleExpand('widget-comments')" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="높이 꽉 채우기">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                        </button>
-                        <div class="admin-drag-handle cursor-grab active:cursor-grabbing bg-[#3182F6] p-2 rounded-lg text-white shadow-lg transition-transform hover:scale-105" title="드래그 이동">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center mb-4 pr-10">
-                        <h2 class="text-[18px] md:text-xl font-bold text-white tracking-tight">의견 나누기</h2>
-                        <span id="db-status" class="text-[12px] text-[#8B95A1]">연결 중...</span>
+                <!-- 의견 나누기 (댓글) -->
+                <section id="widget-comments" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex-1 min-h-[450px] flex flex-col" draggable="false">
+                    <div class="flex justify-between items-center mb-4 pr-2">
+                        <h2 class="text-xl font-bold text-white tracking-tight">의견 나누기</h2>
+                        <span id="db-status" class="text-[12px] text-[#8B95A1] bg-[#2C2C2E] px-2 py-1 rounded-[6px]">연결 확인중</span>
                     </div>
                     
+                    <!-- 댓글 방 분리 탭 -->
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 pb-1 w-full">
+                        <button onclick="changeCommentRoom('all')" id="c-tab-all" class="c-tab active whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#3182F6] text-white text-[13px] font-bold">전체 시장</button>
+                        <button onclick="changeCommentRoom('BTC')" id="c-tab-BTC" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">비트코인</button>
+                        <button onclick="changeCommentRoom('ETH')" id="c-tab-ETH" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">이더리움</button>
+                        <button onclick="changeCommentRoom('SOL')" id="c-tab-SOL" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">솔라나</button>
+                        <button onclick="changeCommentRoom('SUI')" id="c-tab-SUI" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">수이</button>
+                    </div>
+
+                    <!-- 댓글 폼 (닉네임 자동 저장) -->
                     <form id="comment-form" class="flex flex-col gap-3 mb-6 w-full pb-6 border-b border-[#2C2C2E]">
-                        <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[12px] px-4 py-3 text-white text-[15px] focus:outline-none focus:ring-1 focus:ring-[#3182F6]" placeholder="닉네임 (한 번 설정 시 자동 유지됨)" maxlength="15" disabled>
-                        <div class="relative w-full">
-                            <textarea id="comment-input" class="w-full bg-[#24272F] rounded-[16px] px-4 py-4 pb-14 text-white text-[16px] focus:outline-none focus:ring-1 focus:ring-[#3182F6] resize-none h-[110px]" placeholder="자유롭게 의견을 남겨보세요..." required disabled></textarea>
-                            <button type="submit" id="comment-submit" class="absolute bottom-3 right-3 bg-[#3182F6] hover:bg-[#1B64DA] text-white font-semibold py-2 px-5 rounded-[10px] transition-colors disabled:opacity-50 text-[14px]">등록</button>
+                        <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[16px] px-4 py-3 text-white text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="닉네임 (한 번 적으면 자동 저장)" maxlength="15">
+                        <div class="flex gap-2 w-full">
+                            <input type="text" id="comment-input" class="flex-1 bg-[#24272F] rounded-[16px] px-4 py-3 text-white text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="자유롭게 의견을 남겨주세요.">
+                            <button type="submit" id="comment-submit" class="bg-[#3182F6] hover:bg-blue-600 text-white px-5 py-3 rounded-[16px] font-bold transition-colors whitespace-nowrap shrink-0">등록</button>
                         </div>
                     </form>
-                    
-                    <div id="comments-list" class="space-y-4 overflow-y-auto pr-2 custom-scrollbar w-full h-0 flex-1 min-h-[300px]">
-                        <div class="text-[#8B95A1] py-8 text-center text-[15px]">데이터를 불러오고 있습니다...</div>
-                    </div>
-                </div>
 
+                    <!-- 댓글 리스트 (카카오톡 피드 스타일) -->
+                    <div id="comments-list" class="flex-1 overflow-y-auto hide-scrollbar space-y-4 pr-1">
+                        <div class="text-[#8B95A1] py-8 text-center text-[15px]">데이터베이스 연결 대기 중...</div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 관리자용 모달 팝업 -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1C1C1E] rounded-[24px] p-6 w-full max-w-lg border border-[#2C2C2E]">
+            <h3 class="text-xl font-bold text-white mb-4">인사이트 리포트 발행</h3>
+            <input type="text" id="edit-report-title" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-3 focus:outline-none focus:bg-[#2C2C2E]" placeholder="제목을 입력하세요">
+            <textarea id="edit-report-content" class="w-full bg-[#24272F] text-white p-3 rounded-[12px] mb-4 h-40 resize-none focus:outline-none focus:bg-[#2C2C2E]" placeholder="내용을 입력하세요"></textarea>
+            <div class="flex justify-end gap-3">
+                <button onclick="cancelAdminEdit()" class="px-4 py-2 text-[#8B95A1] hover:text-white font-medium transition-colors">취소</button>
+                <button id="save-report-btn" class="px-5 py-2 bg-[#3182F6] hover:bg-blue-600 text-white rounded-[10px] font-bold transition-colors">발행하기</button>
             </div>
         </div>
     </div>
 
-    <!-- 토스 스타일 팝업 모달 -->
-    <div id="custom-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex justify-center items-center backdrop-blur-sm p-4">
-        <div class="bg-[#1C1C1E] p-6 rounded-[24px] w-full max-w-sm shadow-2xl transform transition-all border border-[#2C2C2E]">
-            <h3 class="text-xl font-bold text-white mb-2">관리자 인증</h3>
-            <p class="text-[14px] text-[#8B95A1] mb-5 leading-relaxed">COMPANY INSIGHT 편집 및 관리자 권한을 위해 핀(PIN)을 입력하세요.</p>
-            
-            <input type="password" id="modal-input" class="w-full bg-[#24272F] rounded-[12px] px-4 py-3.5 text-white text-[16px] focus:outline-none focus:ring-2 focus:ring-[#3182F6] mb-2 font-mono" placeholder="비밀번호 4자리">
-            <p id="modal-error" class="text-[#F04452] text-[13px] h-5 mb-3 font-medium"></p>
-            
-            <div class="flex gap-3 w-full mt-2">
-                <button onclick="closeModal()" class="flex-1 py-3.5 bg-[#2C2C2E] text-white rounded-[14px] font-semibold text-[15px] hover:bg-[#3A3A3C]">취소</button>
-                <button id="modal-submit" class="flex-1 py-3.5 bg-[#3182F6] text-white rounded-[14px] font-semibold text-[15px] hover:bg-[#1B64DA]">확인</button>
-            </div>
-        </div>
+    <!-- 플로팅 관리자 툴바 -->
+    <div id="admin-toolbar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1C1C1E] border border-[#3182F6]/50 shadow-[0_0_20px_rgba(49,130,246,0.2)] rounded-full px-6 py-3 hidden items-center gap-4 z-50">
+        <span class="text-[13px] font-bold text-[#3182F6]"><i class="fa-solid fa-lock-open mr-1"></i> 관리자 모드</span>
+        <div class="h-4 w-[1px] bg-[#2C2C2E]"></div>
+        <span class="text-[12px] text-[#8B95A1]">UI 드래그 & 확장 가능</span>
+        <button onclick="saveLayout()" class="bg-[#3182F6] hover:bg-blue-600 text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">위치 저장</button>
+        <button onclick="openAdminEdit()" class="bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors">글쓰기</button>
+        <div class="h-4 w-[1px] bg-[#2C2C2E]"></div>
+        <button onclick="logoutAdmin()" class="text-[12px] font-bold text-[#F04452] hover:text-red-400 px-2">종료</button>
     </div>
 
-    <div id="alert-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex justify-center items-center backdrop-blur-sm p-4">
-        <div class="bg-[#1C1C1E] p-6 rounded-[24px] w-full max-w-sm shadow-2xl border border-[#2C2C2E] flex flex-col items-center text-center">
-            <div class="w-12 h-12 bg-[#3182F6]/20 rounded-full flex items-center justify-center mb-4 text-[#3182F6]">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <h3 id="alert-title" class="text-[16px] font-bold text-white mb-6 leading-relaxed break-keep">알림</h3>
-            <button onclick="closeAlert()" class="w-full py-3.5 bg-[#3182F6] hover:bg-[#1B64DA] text-white rounded-[14px] font-semibold text-[15px]">확인</button>
-        </div>
-    </div>
-
-    <!-- 최고 관리자 플로팅 툴바 (종료 버튼 추가) -->
-    <div id="admin-floating-toolbar" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-[#2C2C2E]/95 backdrop-blur-md border border-[#3A3A3C] px-6 py-3.5 rounded-full flex gap-5 items-center shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-40 hidden transition-all">
-        <span class="text-white font-bold text-[14px] flex items-center gap-1.5 whitespace-nowrap"><span class="text-[#3182F6]">⭐️</span> 관리자 접속됨</span>
-        <div class="w-px h-5 bg-[#4A4A4C]"></div>
-        <button id="toggle-edit-btn" onclick="toggleUIEditMode()" class="text-[#8B95A1] hover:text-white text-[14px] font-semibold transition-colors whitespace-nowrap">UI 변경 모드</button>
-        <button id="save-layout-btn" onclick="saveUILayout()" class="hidden bg-[#3182F6] hover:bg-[#1B64DA] text-white text-[14px] font-bold px-4 py-2 rounded-[12px] transition-colors whitespace-nowrap shadow-lg">레이아웃 저장</button>
-        <div class="w-px h-5 bg-[#4A4A4C]"></div>
-        <!-- ★ 관리자 모드 로그아웃(종료) 버튼 -->
-        <button onclick="logoutAdmin()" class="text-[#F04452] hover:text-red-400 text-[14px] font-semibold transition-colors whitespace-nowrap" title="관리자 권한 해제">종료</button>
-    </div>
-
-    <!-- 프론트엔드 기능 스크립트 -->
-    <script>
-        const COINS = [
-            { id: 'BTCUSDT', symbol: 'BTC', name: '비트코인', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=025', tvSymbol: 'BINANCE:BTCUSDT' },
-            { id: 'ETHUSDT', symbol: 'ETH', name: '이더리움', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025', tvSymbol: 'BINANCE:ETHUSDT' },
-            { id: 'SOLUSDT', symbol: 'SOL', name: '솔라나', logo: 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=025', tvSymbol: 'BINANCE:SOLUSDT' },
-            { id: 'SUIUSDT', symbol: 'SUI', name: '수이', logo: 'https://cryptologos.cc/logos/sui-sui-logo.svg?v=025', tvSymbol: 'BINANCE:SUIUSDT' }
-        ];
-
-        let priceCache = {};
-        let tvWidget = null;
-
-        function initCards() {
-            const grid = document.getElementById('crypto-grid');
-            grid.innerHTML = '';
-            
-            COINS.forEach(coin => {
-                const card = document.createElement('div');
-                card.id = `card-${coin.id}`;
-                card.className = `toss-card p-5 cursor-pointer flex flex-col justify-between h-[130px] border border-transparent hover:border-[#3182F6]/30 transition-all`;
-                card.onclick = () => openChart(coin.tvSymbol, coin.name);
-                
-                card.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <img src="${coin.logo}" class="w-7 h-7 object-contain">
-                        <span class="text-[16px] font-bold text-white">${coin.name}</span>
-                    </div>
-                    <div class="mt-auto">
-                        <div class="text-[20px] md:text-[22px] font-bold text-white tracking-tight font-mono" id="price-${coin.id}">---</div>
-                        <div class="text-[14px] font-semibold mt-0.5" id="change-pct-${coin.id}">0.00%</div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function openChart(tvSymbol, name) {
-            const container = document.getElementById('chart-container');
-            container.classList.remove('hidden');
-            document.getElementById('chart-title').textContent = `${name} 실시간 차트`;
-            
-            if (tvWidget) { tvWidget.remove(); }
-            
-            tvWidget = new TradingView.widget({
-                "autosize": true,
-                "symbol": tvSymbol,
-                "interval": "60",
-                "timezone": "Asia/Seoul",
-                "theme": "dark",
-                "style": "1",
-                "locale": "kr",
-                "enable_publishing": false,
-                "backgroundColor": "#1C1C1E",
-                "gridColor": "#2C2C2E",
-                "hide_top_toolbar": true, 
-                "hide_legend": false,
-                "save_image": false,
-                "container_id": "tradingview-widget-container"
-            });
-            setTimeout(() => { container.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
-        }
-
-        function closeChart() {
-            document.getElementById('chart-container').classList.add('hidden');
-            if (tvWidget) tvWidget.remove();
-            tvWidget = null;
-        }
-
-        function updateCoinUI(symbol, price, changePct) {
-            const priceEl = document.getElementById(`price-${symbol}`);
-            const pctEl = document.getElementById(`change-pct-${symbol}`);
-            const cardEl = document.getElementById(`card-${symbol}`);
-            if (!priceEl || !cardEl) return;
-
-            let formattedPrice = price >= 1000 ? price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) 
-                               : price >= 1 ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
-                               : price.toString();
-
-            const prevPrice = priceCache[symbol];
-            if (prevPrice !== undefined && prevPrice !== price) {
-                cardEl.classList.remove('update-up', 'update-down');
-                void cardEl.offsetWidth; 
-                if (price > prevPrice) cardEl.classList.add('update-up');
-                else if (price < prevPrice) cardEl.classList.add('update-down');
-            }
-            priceCache[symbol] = price;
-
-            priceEl.innerHTML = `$${formattedPrice}`;
-            pctEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
-            
-            if (changePct > 0) pctEl.style.color = '#F04452';
-            else if (changePct < 0) pctEl.style.color = '#3182F6';
-            else pctEl.style.color = '#8B95A1';
-        }
-
-        function connectWebSocket() {
-            const streams = COINS.map(c => `${c.id.toLowerCase()}@ticker`).join('/');
-            const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data).data;
-                updateCoinUI(data.s, parseFloat(data.c), parseFloat(data.P));
-            };
-            ws.onclose = () => setTimeout(connectWebSocket, 5000); 
-        }
-
-        async function fetchFearAndGreed() {
-            try {
-                const res = await fetch('https://api.alternative.me/fng/');
-                const value = parseInt((await res.json()).data[0].value);
-                
-                document.getElementById('fng-value').textContent = value;
-                setTimeout(() => { document.getElementById('fng-bar').style.width = `${value}%`; }, 100);
-                
-                let text = '중립', color = '#8B95A1';
-                if (value <= 25) { text = '극단적 공포'; color = '#3182F6'; }
-                else if (value <= 45) { text = '공포'; color = '#79B1FF'; } 
-                else if (value >= 75) { text = '극단적 탐욕'; color = '#F04452'; }
-                else if (value > 55) { text = '탐욕'; color = '#FCA3AD'; }
-                
-                document.getElementById('fng-text').textContent = text;
-                document.getElementById('fng-text').style.color = color;
-                document.getElementById('fng-bar').style.backgroundColor = color;
-            } catch (e) {}
-        }
-
-        async function fetchNews() {
-            const container = document.getElementById('news-container');
-            
-            const fetchCryptoCompare = async () => {
-                try {
-                    const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
-                    const json = await res.json();
-                    if (json.Data) {
-                        return json.Data.slice(0, 7).map(n => ({
-                            title: n.title, url: n.url, source: n.source_info.name, time: new Date(n.published_on * 1000)
-                        }));
-                    }
-                } catch (e) {}
-                return [];
-            };
-
-            const fetchInvesting = async () => {
-                try {
-                    const cb = new Date().getTime();
-                    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://kr.investing.com/rss/news_301.rss&cb=${cb}`);
-                    const json = await res.json();
-                    if (json.items) {
-                        return json.items.slice(0, 5).map(item => ({
-                            title: item.title, url: item.link, source: 'Investing.com', time: new Date(item.pubDate.replace(/-/g, '/'))
-                        }));
-                    }
-                } catch (e) {}
-                return [];
-            };
-
-            const results = await Promise.all([fetchCryptoCompare(), fetchInvesting()]);
-            let allNews = [...results[0], ...results[1]];
-            
-            allNews.sort((a, b) => b.time - a.time);
-
-            if (allNews.length > 0) {
-                container.innerHTML = allNews.slice(0, 10).map((news) => {
-                    const timeStr = `${news.time.getHours().toString().padStart(2,'0')}:${news.time.getMinutes().toString().padStart(2,'0')}`;
-                    return `
-                        <a href="${news.url}" target="_blank" class="block py-3.5 hover:bg-[#2C2C2E] transition-colors rounded-[12px] px-3 mb-1 border-b border-[#2C2C2E]/50 last:border-0 group w-full">
-                            <h3 class="text-[15px] font-medium text-[#F2F4F6] leading-[1.5] mb-1.5 line-clamp-2 group-hover:text-[#3182F6] transition-colors break-keep">${news.title}</h3>
-                            <div class="text-[12px] text-[#8B95A1] font-mono">${news.source} • ${timeStr}</div>
-                        </a>
-                    `;
-                }).join('');
-            } else {
-                container.innerHTML = `<div class="p-4 text-center text-[#F04452] font-semibold">데이터 동기화 지연.<br>잠시 후 다시 시도합니다.</div>`;
-            }
-        }
-
-        // 팝업 컨트롤
-        function showAlert(msg) {
-            document.getElementById('alert-title').innerHTML = msg;
-            document.getElementById('alert-modal').classList.remove('hidden');
-        }
-        function closeAlert() {
-            document.getElementById('alert-modal').classList.add('hidden');
-        }
-        
-        function showAdminModal() {
-            document.getElementById('modal-input').value = '';
-            document.getElementById('modal-error').textContent = '';
-            document.getElementById('custom-modal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('modal-input').focus(), 100);
-            
-            document.getElementById('modal-input').onkeypress = (e) => {
-                if (e.key === 'Enter') checkAdminPassword();
-            };
-        }
-        function closeModal() {
-            document.getElementById('custom-modal').classList.add('hidden');
-        }
-        
-        function checkAdminPassword() {
-            const pwd = document.getElementById('modal-input').value;
-            if (pwd === "4242") { // ★ 요청하신 4242 비밀번호로 변경됨
-                closeModal();
-                localStorage.setItem('crypto_isAdmin', 'true');
-                showAlert("관리자 인증 완료.<br>숨겨진 툴바 및 최고 권한이 활성화되었습니다.");
-
-                document.getElementById('report-view-mode').classList.add('hidden');
-                document.getElementById('report-edit-mode').classList.replace('hidden', 'flex');
-                
-                const curTitle = document.getElementById('display-report-title').innerText;
-                if(curTitle !== "데이터 로딩 중..." && curTitle !== "등록된 리포트가 없습니다.") {
-                    document.getElementById('edit-report-title').value = curTitle;
-                    document.getElementById('edit-report-content').value = document.getElementById('display-report-content').innerHTML.replace(/<br\s*[\/]?>/gi, '\n');
-                }
-
-                document.getElementById('admin-floating-toolbar').classList.remove('hidden');
-                // 기존 댓글 리스트 재렌더링 (삭제 버튼 표시)
-                if (window.currentCommentsData) window.renderComments(window.currentCommentsData);
-            } else {
-                document.getElementById('modal-error').textContent = '비밀번호가 일치하지 않습니다.';
-            }
-        }
-        document.getElementById('modal-submit').addEventListener('click', checkAdminPassword);
-
-        // ★ 관리자 모드 로그아웃 기능
-        window.logoutAdmin = () => {
-            localStorage.removeItem('crypto_isAdmin'); // 권한 회수
-            
-            document.getElementById('admin-floating-toolbar').classList.add('hidden'); // 툴바 숨김
-            
-            // UI 변경 모드가 켜져있다면 끄기
-            if(isUIEditMode) window.toggleUIEditMode();
-            
-            // COMPANY INSIGHT 편집기 닫기
-            window.cancelAdminEdit();
-            
-            // 댓글 재렌더링 (관리자 전용 삭제 버튼 숨기기)
-            if (window.currentCommentsData) window.renderComments(window.currentCommentsData);
-            
-            showAlert("관리자 모드가 정상적으로 종료되었습니다.");
-        };
-
-        // UI 확장 및 드래그 로직 개선
-        let sortableLeft, sortableRight;
-        let isUIEditMode = false;
-
-        window.toggleExpand = (widgetId) => {
-            const el = document.getElementById(widgetId);
-            if (el) el.classList.toggle('widget-expanded');
-        };
-
-        window.toggleUIEditMode = () => {
-            isUIEditMode = !isUIEditMode;
-            const btn = document.getElementById('toggle-edit-btn');
-            const saveBtn = document.getElementById('save-layout-btn');
-            const controls = document.querySelectorAll('.admin-controls');
-            const grid = document.getElementById('main-layout-grid');
-            
-            if(isUIEditMode) {
-                btn.textContent = '편집 취소';
-                btn.classList.add('text-[#F04452]');
-                saveBtn.classList.remove('hidden');
-                controls.forEach(c => c.classList.remove('hidden'));
-                grid.classList.add('edit-mode-active');
-                
-                showAlert("UI 편집 모드 켜짐<br>파란 버튼으로 이동하고, 까만 화살표 버튼으로 높이를 빈 공간까지 꽉 채워보세요!");
-                
-                sortableLeft = new Sortable(document.getElementById('left-column'), { 
-                    group: 'shared', animation: 250, handle: '.admin-drag-handle', ghostClass: 'sortable-ghost', dragClass: 'sortable-drag'
-                });
-                sortableRight = new Sortable(document.getElementById('right-column'), { 
-                    group: 'shared', animation: 250, handle: '.admin-drag-handle', ghostClass: 'sortable-ghost', dragClass: 'sortable-drag'
-                });
-            } else {
-                btn.textContent = 'UI 변경 모드';
-                btn.classList.remove('text-[#F04452]');
-                saveBtn.classList.add('hidden');
-                controls.forEach(c => c.classList.add('hidden'));
-                grid.classList.remove('edit-mode-active');
-                if(sortableLeft) sortableLeft.destroy();
-                if(sortableRight) sortableRight.destroy();
-            }
-        };
-
-        window.applyLayout = (leftOrder, rightOrder) => {
-            const leftCol = document.getElementById('left-column');
-            const rightCol = document.getElementById('right-column');
-            
-            leftOrder.forEach(id => { const el = document.getElementById(id); if (el) leftCol.appendChild(el); });
-            rightOrder.forEach(id => { const el = document.getElementById(id); if (el) rightCol.appendChild(el); });
-        };
-
-        window.cancelAdminEdit = () => {
-            document.getElementById('report-edit-mode').classList.replace('flex', 'hidden');
-            document.getElementById('report-view-mode').classList.remove('hidden');
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initCards();
-            connectWebSocket(); 
-            fetchFearAndGreed(); 
-            fetchNews(); 
-            setInterval(fetchNews, 5 * 60 * 1000); 
-        });
-    </script>
-
-    <!-- 파이어베이스 데이터베이스 스크립트 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // =========================================================================
+        // 🔑 전달해주신 파이어베이스 API 키 및 설정 적용 완료
+        // =========================================================================
+        const myFirebaseConfig = {
             apiKey: "AIzaSyBhJ9gMEGUXzeksFObiH9aL-n8Yg2VSgxA",
             authDomain: "seongwonnotti-crypto-news.firebaseapp.com",
             projectId: "seongwonnotti-crypto-news",
             storageBucket: "seongwonnotti-crypto-news.firebasestorage.app",
             messagingSenderId: "205067848367",
-            appId: "1:205067848367:web:87c8e84cc4f5c15de5a25a"
+            appId: "1:205067848367:web:87c8e84cc4f5c15de5a25a",
+            measurementId: "G-99HFYR2SPV"
         };
+        // =========================================================================
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, auth, db;
+        let priceCache = {};
+        let aiData = { news: "", analyst: "", macro: "", sentiment: "", updatedAt: 0 };
+        
+        // 전역 상태 변수
+        window.currentCommentsData = [];
+        window.currentCommentRoom = 'all';
+        window.openedReplies = new Set();
 
-        window.deleteComment = async (commentId) => {
+        const nicknameInput = document.getElementById('nickname-input');
+        if(nicknameInput) {
+            nicknameInput.addEventListener('blur', (e) => {
+                const val = e.target.value.trim();
+                if(val) localStorage.setItem('crypto_nickname', val);
+            });
+            const savedNick = localStorage.getItem('crypto_nickname');
+            if(savedNick) nicknameInput.value = savedNick;
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#3182F6] text-white px-5 py-3 rounded-full shadow-lg font-bold text-[14px] z-50 transition-all duration-300 translate-y-10 opacity-0";
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        async function updatePrices() {
             try {
-                await deleteDoc(doc(db, 'comments', commentId));
-                showAlert("댓글이 성공적으로 삭제되었습니다.");
-            } catch (error) { showAlert("삭제에 실패했습니다."); }
-        };
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","SUIUSDT"]');
+                const data = await res.json();
+                
+                data.forEach(coin => {
+                    let symbol = coin.symbol.replace('USDT', '').toLowerCase();
+                    let price = parseFloat(coin.lastPrice);
+                    let changePct = parseFloat(coin.priceChangePercent);
+                    
+                    const priceEl = document.getElementById(`price-${symbol}`);
+                    const pctEl = document.getElementById(`pct-${symbol}`);
+                    const cardEl = document.getElementById(`card-${symbol}`);
+                    if(!priceEl || !pctEl || !cardEl) return;
 
-        window.saveUILayout = async () => {
-            const leftOrder = Array.from(document.getElementById('left-column').children).filter(el => el.id.startsWith('widget-')).map(el => el.id);
-            const rightOrder = Array.from(document.getElementById('right-column').children).filter(el => el.id.startsWith('widget-')).map(el => el.id);
-            const expanded = Array.from(document.querySelectorAll('.widget-expanded')).map(el => el.id);
-            
-            const btn = document.getElementById('save-layout-btn');
-            btn.textContent = '저장 중...';
-            
+                    let formattedPrice = price < 10 ? price.toFixed(4) : price.toLocaleString('en-US', {maximumFractionDigits:2});
+                    
+                    const prevPrice = priceCache[symbol];
+                    if (prevPrice !== undefined && prevPrice !== price) {
+                        cardEl.classList.remove('update-up', 'update-down');
+                        void cardEl.offsetWidth; 
+                        if (price > prevPrice) cardEl.classList.add('update-up');
+                        else if (price < prevPrice) cardEl.classList.add('update-down');
+                    }
+                    priceCache[symbol] = price;
+
+                    priceEl.innerHTML = `$ ${formattedPrice}`;
+                    pctEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+                    
+                    if (changePct > 0) pctEl.style.color = '#F04452';
+                    else if (changePct < 0) pctEl.style.color = '#3182F6';
+                    else pctEl.style.color = '#8B95A1';
+                });
+            } catch (e) { console.log('Price update failed', e); }
+        }
+
+        async function updateFearGreed() {
             try {
-                await setDoc(doc(db, 'system', 'layout'), { left: leftOrder, right: rightOrder, expanded: expanded, updatedAt: Date.now() });
-                showAlert("위치와 크기가 서버에 완벽하게 저장되었습니다!<br>방문자들의 화면도 즉시 똑같이 바뀝니다.");
-                window.toggleUIEditMode();
-            } catch (error) { showAlert("레이아웃 저장에 실패했습니다."); } 
-            finally { btn.textContent = '레이아웃 저장'; }
-        };
+                const res = await fetch('https://api.alternative.me/fng/');
+                const data = await res.json();
+                const value = data.data[0].value;
+                
+                document.getElementById('fg-value').textContent = value;
+                
+                let krClass = '중립';
+                let color = '#8B95A1';
+                let icon = 'fa-scale-balanced';
+                
+                if(value <= 25) { krClass = '극단적 공포'; color = '#3182F6'; icon = 'fa-snowflake'; }
+                else if(value <= 45) { krClass = '공포'; color = '#3182F6'; icon = 'fa-cloud-rain'; }
+                else if(value >= 75) { krClass = '극단적 탐욕'; color = '#F04452'; icon = 'fa-fire'; }
+                else if(value >= 55) { krClass = '탐욕'; color = '#F04452'; icon = 'fa-arrow-trend-up'; }
+                
+                document.getElementById('fg-class').textContent = krClass;
+                document.getElementById('fg-class').style.color = color;
+                document.getElementById('fg-value').style.color = color;
+                document.getElementById('fg-ring').style.borderColor = color;
+                
+                const iconEl = document.getElementById('fg-icon');
+                iconEl.className = `fa-solid ${icon} text-2xl`;
+                iconEl.style.color = color;
+            } catch (e) { console.log('F&G update failed', e); }
+        }
 
-        let aiDataStore = { news: "데이터 대기 중...", analyst: "데이터 대기 중...", macro: "데이터 대기 중...", sentiment: "데이터 대기 중..." };
-        let currentAITab = 'news';
-
-        window.changeAITab = function(tabName) {
-            currentAITab = tabName;
-            document.getElementById('ai-report-content').innerHTML = (aiDataStore[tabName] || "데이터가 없습니다.").replace(/\n/g, '<br>');
-            document.querySelectorAll('.toss-tab').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`tab-${tabName}`);
-            if(activeBtn) activeBtn.classList.add('active');
-        };
-
-        document.getElementById('save-report-btn').addEventListener('click', async () => {
-            const titleInput = document.getElementById('edit-report-title').value.trim();
-            const contentInput = document.getElementById('edit-report-content').value.trim();
-            if (!titleInput || !contentInput) { showAlert('제목과 내용을 모두 입력해주세요.'); return; }
-            
-            const btn = document.getElementById('save-report-btn');
-            btn.disabled = true; btn.textContent = '발행 중...';
-            
+        async function fetchNews() {
             try {
-                const now = new Date();
-                const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 발행`;
-                await setDoc(doc(db, 'admin', 'special_report'), { title: titleInput, content: contentInput, date: dateStr, updatedAt: Date.now() });
-                window.cancelAdminEdit();
-                showAlert("리포트가 성공적으로 발행되었습니다.");
-            } catch (error) { showAlert('발행에 실패했습니다.'); } 
-            finally { btn.disabled = false; btn.textContent = '발행하기'; }
-        });
+                const cryptoCompareReq = fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN').then(res => res.json()).then(data => {
+                    return data.Data.slice(0, 15).map(item => ({
+                        title: item.title, url: item.url, source: item.source_info.name, time: item.published_on * 1000
+                    }));
+                });
+
+                const investingReq = fetch('https://api.rss2json.com/v1/api.json?rss_url=https://kr.investing.com/rss/news_301.rss').then(res => res.json()).then(data => {
+                    if(!data.items) return [];
+                    return data.items.slice(0, 10).map(item => ({
+                        title: item.title, url: item.link, source: 'Investing.com', time: new Date(item.pubDate.replace(/-/g, '/')).getTime()
+                    }));
+                });
+
+                const results = await Promise.allSettled([cryptoCompareReq, investingReq]);
+                let allNews = [];
+                
+                if(results[0].status === 'fulfilled') allNews = allNews.concat(results[0].value);
+                if(results[1].status === 'fulfilled') allNews = allNews.concat(results[1].value);
+
+                allNews.sort((a, b) => b.time - a.time);
+                
+                const list = document.getElementById('news-list');
+                list.innerHTML = '';
+                
+                allNews.slice(0, 6).forEach(item => {
+                    const date = new Date(item.time);
+                    const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    list.innerHTML += `
+                        <li class="group border-b border-[#2C2C2E] pb-3 last:border-0 last:pb-0">
+                            <a href="${item.url}" target="_blank" class="block">
+                                <div class="text-[14px] text-[#D1D6DB] group-hover:text-white transition-colors line-clamp-2 leading-snug mb-1 word-break">${item.title}</div>
+                                <div class="text-[11px] text-[#8B95A1] font-medium tracking-wide">${item.source} • ${timeStr}</div>
+                            </a>
+                        </li>
+                    `;
+                });
+            } catch (e) {
+                document.getElementById('news-list').innerHTML = `<li class="text-[#8B95A1] text-[13px] text-center">뉴스 피드를 가져올 수 없습니다.</li>`;
+            }
+        }
+
+        async function initFirebaseApp() {
+            try {
+                app = initializeApp(myFirebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                await signInAnonymously(auth);
+                document.getElementById('db-status').innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> 서버 연결됨</span>`;
+                
+                listenToFirebase();
+                loadLayout();
+            } catch (error) {
+                console.error("Firebase 초기화 에러:", error);
+                document.getElementById('db-status').innerHTML = `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> 서버 연결 실패</span>`;
+            }
+        }
+
+        function listenToFirebase() {
+            if(!db) return;
+            
+            onSnapshot(doc(db, 'system', 'ai_summary'), (docSnap) => {
+                if (docSnap.exists()) {
+                    aiData = docSnap.data();
+                    const activeTab = document.querySelector('.tab-btn.bg-\\[\\#3182F6\\]');
+                    if (activeTab) activeTab.click(); 
+                    if (aiData.updatedAt) {
+                        const date = new Date(parseInt(aiData.updatedAt));
+                        document.getElementById('ai-time').textContent = `업데이트: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                    }
+                }
+            });
+
+            onSnapshot(doc(db, 'admin', 'special_report'), (docSnap) => {
+                if(docSnap.exists()){
+                    const data = docSnap.data();
+                    document.getElementById('report-title').textContent = data.title;
+                    document.getElementById('report-content').textContent = data.content;
+                    document.getElementById('report-date').textContent = data.date;
+                } else {
+                    document.getElementById('report-title').textContent = "등록된 인사이트가 없습니다.";
+                    document.getElementById('report-content').textContent = "관리자가 새로운 시장 분석을 준비 중입니다.";
+                }
+            });
+
+            const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                const comments = [];
+                snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
+                window.currentCommentsData = comments;
+                window.renderComments(comments);
+            });
+        }
+
+        window.switchTab = function(category) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-[#3182F6]', 'text-white');
+                btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
+            });
+            const activeBtn = document.getElementById(`tab-${category}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
+                activeBtn.classList.add('bg-[#3182F6]', 'text-white');
+            }
+            document.getElementById('ai-text').innerHTML = (aiData[category] || "데이터가 아직 생성되지 않았습니다.").replace(/\n/g, '<br>');
+        };
+
+        window.changeCommentRoom = function(room) {
+            window.currentCommentRoom = room;
+            document.querySelectorAll('.c-tab').forEach(btn => {
+                btn.classList.remove('bg-[#3182F6]', 'text-white');
+                btn.classList.add('bg-[#2C2C2E]', 'text-[#8B95A1]');
+            });
+            const activeTab = document.getElementById(`c-tab-${room}`);
+            if(activeTab) {
+                activeTab.classList.remove('bg-[#2C2C2E]', 'text-[#8B95A1]');
+                activeTab.classList.add('bg-[#3182F6]', 'text-white');
+            }
+            if(window.currentCommentsData) window.renderComments(window.currentCommentsData);
+        };
 
         window.renderComments = function(comments) {
             const list = document.getElementById('comments-list');
-            if (comments.length === 0) {
-                 list.innerHTML = `<div class="text-[#8B95A1] py-8 text-center text-[15px]">첫 번째 의견을 남겨주세요.</div>`;
+            const roomComments = comments.filter(c => (c.room || 'all') === window.currentCommentRoom);
+            
+            if (roomComments.length === 0) {
+                 list.innerHTML = `<div class="text-[#8B95A1] py-8 text-center text-[14px]">이 방에 첫 번째 의견을 남겨주세요.</div>`;
                  return;
             }
 
-            const topComments = comments.filter(c => !c.parentId).sort((a, b) => b.createdAt - a.createdAt);
-            const childComments = comments.filter(c => c.parentId).sort((a, b) => a.createdAt - b.createdAt);
             const isSuperAdmin = localStorage.getItem('crypto_isAdmin') === 'true'; 
-            const currentUserId = auth.currentUser?.uid; // 현재 접속한 내 고유 ID
+            const currentUserId = auth?.currentUser?.uid; 
 
-            let htmlString = '';
-            topComments.forEach(c => {
-                const isMe = c.userId === currentUserId;
-                const isAdmin = c.role === 'admin';
-                const date = new Date(c.createdAt);
-                const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                
-                let badge = ''; let nameColor = 'text-white';
-                if (isAdmin) { badge = `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[11px] rounded-[4px] ml-1.5">⭐️ 관리자</span>`; nameColor = 'text-[#3182F6]'; } 
-                else if (isMe) { badge = `<span class="text-[#8B95A1] ml-1.5 text-[12px]">(나)</span>`; }
+            function countDescendants(parentId) {
+                const children = roomComments.filter(c => c.parentId === parentId);
+                let count = children.length;
+                children.forEach(child => count += countDescendants(child.id));
+                return count;
+            }
 
-                // 최고 관리자이거나, 내가 쓴 글이면 삭제 버튼 표시
-                const deleteBtn = (isSuperAdmin || isMe) ? `<button onclick="deleteComment('${c.id}')" class="text-[12px] font-bold text-[#F04452] hover:text-red-400 transition-colors ml-3 bg-[#F04452]/10 px-2 py-0.5 rounded">삭제</button>` : '';
+            function buildCommentTree(parentId, depth) {
+                const children = roomComments.filter(c => c.parentId === parentId).sort((a, b) => parentId ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
+                if (children.length === 0) return '';
 
-                // 로컬 스토리지에 저장된 닉네임 가져오기 (대댓글 폼 자동완성용)
-                const savedNick = localStorage.getItem('crypto_nickname') || '';
+                let html = '';
+                const containerClass = depth === 0 ? 'mb-4' : (depth === 1 ? 'mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3' : 'mt-2 ml-2 border-l border-dashed border-[#4A4A4C] pl-2');
 
-                htmlString += `
-                    <div class="flex flex-col mb-2">
-                        <div class="flex items-center space-x-2 mb-1.5">
-                            <span class="text-[14px] font-bold ${nameColor}">${c.nickname} ${badge}</span>
-                            <span class="text-[12px] text-[#8B95A1] font-mono">${timeStr}</span>
-                            ${deleteBtn}
-                        </div>
-                        <div class="text-[15px] text-[#D1D6DB] break-words leading-relaxed bg-[#24272F] px-4 py-3.5 rounded-[18px] rounded-tl-[4px] w-fit max-w-[95%] shadow-sm word-break">
-                            ${c.text.replace(/\n/g, '<br>')}
-                        </div>
-                        <div class="mt-1.5 ml-2">
-                            <button onclick="toggleReplyForm('${c.id}')" class="text-[12px] font-medium text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
-                        </div>
-                        
-                        <!-- ★ 대댓글 폼에서 닉네임 입력창 완전히 삭제 (자동 동기화됨) -->
-                        <div id="reply-form-${c.id}" class="hidden mt-2 ml-4 border-l-2 border-[#2C2C2E] pl-4 w-full pr-4">
-                            <div class="flex gap-2">
-                                <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#24272F] text-white text-[14px] rounded-[10px] px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#3182F6] min-w-0" placeholder="답글을 입력하세요...">
-                                <button onclick="submitReply('${c.id}')" class="bg-[#3182F6] text-white px-4 py-2.5 rounded-[10px] text-[13px] font-bold whitespace-nowrap shrink-0">등록</button>
+                children.forEach(c => {
+                    const isMe = c.userId === currentUserId;
+                    const isAdmin = c.role === 'admin';
+                    const date = new Date(c.createdAt);
+                    const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    let badge = ''; let nameColor = depth === 0 ? 'text-white' : 'text-[#8B95A1]';
+                    if (isAdmin) { badge = `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] font-bold ml-1.5">⭐️ 관리자</span>`; nameColor = 'text-[#3182F6]'; } 
+                    else if (isMe) { badge = `<span class="text-[#8B95A1] ml-1 text-[11px]">(나)</span>`; }
+
+                    const deleteBtn = (isSuperAdmin || isMe) ? `<button onclick="deleteComment('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 transition-colors ml-2 bg-[#F04452]/10 px-1.5 py-0.5 rounded">삭제</button>` : '';
+                    
+                    const bubbleBg = depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
+                    const textSize = depth === 0 ? 'text-[15px]' : 'text-[14px]';
+                    const descCount = countDescendants(c.id);
+
+                    html += `
+                        <div class="flex flex-col ${containerClass}">
+                            <div class="flex items-center space-x-2 mb-1.5">
+                                <span class="text-[13px] font-bold ${nameColor}">${c.nickname} ${badge}</span>
+                                <span class="text-[11px] text-[#8B95A1] font-mono">${timeStr}</span>
+                                ${deleteBtn}
                             </div>
-                        </div>
-                `;
-
-                const replies = childComments.filter(r => r.parentId === c.id);
-                if (replies.length > 0) {
-                    htmlString += `<div class="mt-2 ml-4 border-l-2 border-[#2C2C2E] pl-4 space-y-3">`;
-                    replies.forEach(r => {
-                        const rIsMe = r.userId === currentUserId;
-                        const rIsAdmin = r.role === 'admin';
-                        const rDate = new Date(r.createdAt);
-                        const rTimeStr = `${(rDate.getMonth()+1).toString().padStart(2,'0')}/${rDate.getDate().toString().padStart(2,'0')} ${rDate.getHours().toString().padStart(2,'0')}:${rDate.getMinutes().toString().padStart(2,'0')}`;
-                        
-                        let rBadge = ''; let rNameColor = 'text-[#8B95A1]';
-                        if (rIsAdmin) { rBadge = `<span class="px-1.5 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[10px] rounded-[4px] ml-1">⭐️ 관리자</span>`; rNameColor = 'text-[#3182F6]'; } 
-                        else if (rIsMe) { rBadge = `<span class="text-[#8B95A1] ml-1 text-[11px]">(나)</span>`; }
-                        
-                        // 대댓글 삭제 버튼 처리 (내 대댓글이면 표시)
-                        const rDeleteBtn = (isSuperAdmin || rIsMe) ? `<button onclick="deleteComment('${r.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 transition-colors ml-2 bg-[#F04452]/10 px-1.5 py-0.5 rounded">삭제</button>` : '';
-
-                        htmlString += `
-                            <div class="flex flex-col">
-                                <div class="flex items-center space-x-2 mb-1">
-                                    <span class="text-[13px] font-bold ${rNameColor}">${r.nickname} ${rBadge}</span>
-                                    <span class="text-[11px] text-[#8B95A1] font-mono">${rTimeStr}</span>
-                                    ${rDeleteBtn}
-                                </div>
-                                <div class="text-[14px] text-[#D1D6DB] break-words leading-relaxed bg-[#2C2C2E] px-3.5 py-2.5 rounded-[16px] rounded-tl-[4px] w-fit max-w-[95%] word-break">
-                                    ${r.text.replace(/\n/g, '<br>')}
+                            <div class="${textSize} text-[#D1D6DB] word-break leading-relaxed ${bubbleBg} px-4 py-3 rounded-[16px] rounded-tl-[4px] w-fit max-w-[95%] shadow-sm">
+                                ${c.text.replace(/\n/g, '<br>')}
+                            </div>
+                            
+                            <div class="mt-2 ml-2 flex items-center gap-3">
+                                <button onclick="toggleReplyForm('${c.id}')" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
+                                ${(descCount > 0) ? `<button onclick="toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
+                            </div>
+                            
+                            <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
+                                <div class="flex gap-2">
+                                    <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[12px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] transition-all min-w-0 border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글을 남겨주세요...">
+                                    <button onclick="submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[12px] text-[13px] font-bold whitespace-nowrap shrink-0 transition-colors">등록</button>
                                 </div>
                             </div>
-                        `;
-                    });
-                    htmlString += `</div>`;
+                    `;
+                    
+                    const childrenHtml = buildCommentTree(c.id, depth + 1);
+                    if (descCount > 0) {
+                        const isHidden = window.openedReplies.has(c.id) ? '' : 'hidden';
+                        html += `<div id="replies-${c.id}" class="${isHidden}">${childrenHtml}</div>`;
+                    } else {
+                        html += childrenHtml;
+                    }
+                    html += `</div>`;
+                });
+                return html;
+            }
+
+            list.innerHTML = buildCommentTree(null, 0) || buildCommentTree(undefined, 0); 
+        };
+
+        window.toggleReplies = (commentId) => {
+            const container = document.getElementById(`replies-${commentId}`);
+            const btn = document.getElementById(`toggle-btn-${commentId}`);
+            if(container && btn) {
+                if(container.classList.contains('hidden')) {
+                    container.classList.remove('hidden');
+                    window.openedReplies.add(commentId);
+                    btn.innerHTML = '답글 접기 ▲';
+                    btn.classList.replace('text-[#3182F6]', 'text-[#8B95A1]');
+                } else {
+                    container.classList.add('hidden');
+                    window.openedReplies.delete(commentId);
+                    const count = btn.getAttribute('data-count');
+                    btn.innerHTML = `답글 ${count}개 보기 ▼`;
+                    btn.classList.replace('text-[#8B95A1]', 'text-[#3182F6]');
                 }
-                htmlString += `</div><div class="h-4"></div>`;
-            });
-            list.innerHTML = htmlString;
-        }
+            }
+        };
 
         window.toggleReplyForm = (parentId) => {
             const form = document.getElementById(`reply-form-${parentId}`);
-            if(form) form.classList.toggle('hidden');
+            if(form) {
+                form.classList.toggle('hidden');
+                if(!form.classList.contains('hidden')) {
+                    const container = document.getElementById(`replies-${parentId}`);
+                    if(container && container.classList.contains('hidden')) window.toggleReplies(parentId);
+                }
+            }
         };
 
         window.submitReply = async (parentId) => {
+            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
             const inputEl = document.getElementById(`reply-input-${parentId}`);
             const text = inputEl.value.trim();
             if(!text) return;
 
-            // ★ 대댓글 전용 닉네임 입력창이 없어졌으므로, 메인 닉네임칸의 값을 가져옴
+            let nick = localStorage.getItem('crypto_nickname');
             const mainNickInput = document.getElementById('nickname-input');
-            let nick = mainNickInput ? mainNickInput.value.trim() : '';
-            
-            // 만약 메인 칸도 비어있으면 로컬스토리지 확인, 거기도 없으면 익명
-            if (!nick) nick = localStorage.getItem('crypto_nickname') || "익명";
-            
-            // 확실하게 저장 및 동기화
-            localStorage.setItem('crypto_nickname', nick);
-            if(mainNickInput) mainNickInput.value = nick;
+            if(!nick && mainNickInput && mainNickInput.value.trim()) {
+                nick = mainNickInput.value.trim();
+                localStorage.setItem('crypto_nickname', nick);
+            }
+            if(!nick) nick = "익명";
 
             const isAdmin = localStorage.getItem('crypto_isAdmin') === 'true';
 
             inputEl.disabled = true;
             try {
                 await addDoc(collection(db, 'comments'), {
-                    text: text, userId: auth.currentUser.uid, nickname: nick, role: isAdmin ? 'admin' : 'user', parentId: parentId, createdAt: Date.now()
+                    text: text, userId: auth.currentUser.uid, nickname: nick, role: isAdmin ? 'admin' : 'user', 
+                    parentId: parentId, room: window.currentCommentRoom, createdAt: Date.now()
                 });
                 inputEl.value = '';
                 toggleReplyForm(parentId);
-            } catch (error) { showAlert("답글 작성에 실패했습니다."); } 
+                window.openedReplies.add(parentId); 
+            } catch (error) { showToast("답글 작성 실패"); } 
             finally { inputEl.disabled = false; }
         };
 
         document.getElementById('comment-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if(!db || !auth) return showToast("DB 연결이 필요합니다.");
             const inputEl = document.getElementById('comment-input');
             const text = inputEl.value.trim();
             if (!text) return;
@@ -831,89 +606,151 @@
             
             try {
                 await addDoc(collection(db, 'comments'), {
-                    text: text, userId: auth.currentUser.uid, nickname: nickname, role: isAdmin ? 'admin' : 'user', createdAt: Date.now()
+                    text: text, userId: auth.currentUser.uid, nickname: nickname, role: isAdmin ? 'admin' : 'user', 
+                    room: window.currentCommentRoom, createdAt: Date.now()
                 });
                 inputEl.value = ''; 
-            } catch (error) { showAlert("글 작성에 실패했습니다."); } 
+            } catch (error) { showToast("글 작성 실패"); } 
             finally { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
         });
 
-        async function initApp() {
-            try {
-                await signInAnonymously(auth);
+        window.deleteComment = async (id) => {
+            if(!db) return;
+            if(confirm("정말로 이 글을 삭제하시겠습니까?")) {
+                try {
+                    await deleteDoc(doc(db, 'comments', id));
+                    showToast("삭제 완료");
+                } catch(e) { showToast("삭제 권한이 없습니다."); }
+            }
+        };
+
+        window.promptAdminLogin = () => {
+            if (localStorage.getItem('crypto_isAdmin') === 'true') {
+                showToast("이미 관리자 모드입니다."); return;
+            }
+            const pwd = prompt("시크릿 관리자 비밀번호를 입력하세요:");
+            if (pwd === '4242') {
+                localStorage.setItem('crypto_isAdmin', 'true');
+                showToast("관리자 모드가 활성화되었습니다!");
+                enableAdminMode();
+            } else if (pwd !== null) {
+                showToast("비밀번호가 틀렸습니다.");
+            }
+        };
+
+        window.logoutAdmin = () => {
+            localStorage.removeItem('crypto_isAdmin');
+            showToast("관리자 권한이 해제되었습니다.");
+            setTimeout(() => location.reload(), 1000);
+        };
+
+        function enableAdminMode() {
+            document.getElementById('admin-toolbar').classList.remove('hidden');
+            document.getElementById('admin-toolbar').classList.add('flex');
+            
+            const widgets = document.querySelectorAll('.draggable');
+            widgets.forEach(w => {
+                w.setAttribute('draggable', 'true');
                 
-                document.getElementById('db-status').textContent = '서버 접속됨';
-                document.getElementById('db-status').classList.replace('text-[#8B95A1]', 'text-[#3182F6]');
-                document.getElementById('comment-input').disabled = false;
-                document.getElementById('nickname-input').disabled = false;
-                document.getElementById('comment-submit').disabled = false;
+                const btn = document.createElement('button');
+                btn.innerHTML = '<i class="fa-solid fa-up-down"></i>';
+                btn.className = "absolute top-4 right-4 bg-[#2C2C2E] hover:bg-[#3182F6] text-white w-8 h-8 flex items-center justify-center rounded-full transition-colors z-10 shadow-lg text-[12px]";
+                btn.title = "위젯 세로 자동 확장";
+                w.style.position = 'relative';
                 
-                const savedName = localStorage.getItem('crypto_nickname');
-                if(savedName) document.getElementById('nickname-input').value = savedName;
-                
-                // ★ 사용자가 메인 닉네임 칸을 수정하기만 해도 즉시 브라우저에 자동 저장되도록 이벤트 추가
-                document.getElementById('nickname-input').addEventListener('blur', (e) => {
-                    localStorage.setItem('crypto_nickname', e.target.value.trim());
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    w.classList.toggle('flex-1');
+                    w.classList.add('flex-auto-transition');
+                };
+                w.appendChild(btn);
+
+                w.addEventListener('dragstart', () => w.classList.add('dragging'));
+                w.addEventListener('dragend', () => w.classList.remove('dragging'));
+            });
+
+            document.querySelectorAll('#col-left, #col-right').forEach(col => {
+                col.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    col.classList.add('drag-over', 'rounded-[24px]');
+                    const dragging = document.querySelector('.dragging');
+                    if(dragging) col.appendChild(dragging);
                 });
-
-                onSnapshot(doc(db, 'admin', 'special_report'), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        document.getElementById('display-report-title').innerText = data.title;
-                        document.getElementById('display-report-date').innerText = data.date;
-                        document.getElementById('display-report-content').innerHTML = data.content.replace(/\n/g, '<br>');
-                    }
-                });
-
-                onSnapshot(doc(db, 'system', 'ai_summary'), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if(data.news) aiDataStore.news = data.news;
-                        if(data.analyst) aiDataStore.analyst = data.analyst;
-                        if(data.macro) aiDataStore.macro = data.macro;
-                        if(data.sentiment) aiDataStore.sentiment = data.sentiment;
-                        
-                        window.changeAITab(currentAITab);
-                        
-                        const ts = parseInt(data.updatedAt);
-                        if(!isNaN(ts)) {
-                            const date = new Date(ts);
-                            document.getElementById('ai-report-time').textContent = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')} 업데이트`;
-                        }
-                    }
-                });
-
-                onSnapshot(collection(db, 'comments'), (snapshot) => {
-                    let comments = [];
-                    snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
-                    window.currentCommentsData = comments;
-                    window.renderComments(comments);
-                }, (error) => console.error(error));
-
-                onSnapshot(doc(db, 'system', 'layout'), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (!window.isUIEditMode) {
-                            if (data.left && data.right) window.applyLayout(data.left, data.right);
-                            document.querySelectorAll('.widget-box').forEach(el => el.classList.remove('widget-expanded'));
-                            if (data.expanded) {
-                                data.expanded.forEach(id => {
-                                    const el = document.getElementById(id);
-                                    if(el) el.classList.add('widget-expanded');
-                                });
-                            }
-                        }
-                    }
-                });
-
-                if (localStorage.getItem('crypto_isAdmin') === 'true') {
-                    document.getElementById('admin-floating-toolbar').classList.remove('hidden');
-                }
-
-            } catch (error) { showAlert('서버 접속에 실패했습니다.'); }
+                col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+                col.addEventListener('drop', () => col.classList.remove('drag-over'));
+            });
         }
 
-        initApp();
+        window.saveLayout = async () => {
+            if(!db) return showToast("DB 연동 필요");
+            if (localStorage.getItem('crypto_isAdmin') !== 'true') return;
+            
+            const layout = {
+                left: Array.from(document.getElementById('col-left').children).map(el => ({id: el.id, expanded: el.classList.contains('flex-1')})),
+                right: Array.from(document.getElementById('col-right').children).map(el => ({id: el.id, expanded: el.classList.contains('flex-1')}))
+            };
+            try {
+                await setDoc(doc(db, 'system', 'layout'), { data: layout });
+                showToast("UI 레이아웃이 영구 저장되었습니다.");
+            } catch(e) { showToast("레이아웃 저장 실패"); }
+        };
+
+        async function loadLayout() {
+            if(!db) return;
+            try {
+                const docSnap = await getDoc(doc(db, 'system', 'layout'));
+                if (docSnap.exists()) {
+                    const layout = docSnap.data().data;
+                    const leftCol = document.getElementById('col-left');
+                    const rightCol = document.getElementById('col-right');
+                    
+                    layout.left.forEach(item => { 
+                        const el = document.getElementById(item.id); 
+                        if(el) { leftCol.appendChild(el); if(item.expanded) el.classList.add('flex-1'); }
+                    });
+                    layout.right.forEach(item => { 
+                        const el = document.getElementById(item.id); 
+                        if(el) { rightCol.appendChild(el); if(item.expanded) el.classList.add('flex-1'); }
+                    });
+                }
+            } catch(e) { console.log('레이아웃 로드 실패'); }
+            
+            if (localStorage.getItem('crypto_isAdmin') === 'true') enableAdminMode();
+        }
+
+        window.openAdminEdit = () => { document.getElementById('admin-modal').classList.remove('hidden'); document.getElementById('admin-modal').classList.add('flex'); };
+        window.cancelAdminEdit = () => { document.getElementById('admin-modal').classList.add('hidden'); document.getElementById('admin-modal').classList.remove('flex'); };
+
+        document.getElementById('save-report-btn').addEventListener('click', async () => {
+            if(!db) return;
+            const titleInput = document.getElementById('edit-report-title').value.trim();
+            const contentInput = document.getElementById('edit-report-content').value.trim();
+            if (!titleInput || !contentInput) { showToast('제목과 내용을 모두 입력해주세요.'); return; }
+            
+            const btn = document.getElementById('save-report-btn');
+            btn.disabled = true; btn.textContent = '발행 중...';
+            
+            try {
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 발행`;
+                await setDoc(doc(db, 'admin', 'special_report'), { title: titleInput, content: contentInput, date: dateStr, updatedAt: Date.now() });
+                cancelAdminEdit();
+                showToast("리포트가 성공적으로 발행되었습니다.");
+            } catch (error) { showToast('발행 실패'); } 
+            finally { btn.disabled = false; btn.textContent = '발행하기'; }
+        });
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').textContent = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        }, 1000);
+        
+        updatePrices(); setInterval(updatePrices, 5000);
+        updateFearGreed(); setInterval(updateFearGreed, 300000);
+        fetchNews(); setInterval(fetchNews, 60000);
+
+        initFirebaseApp();
+
     </script>
 </body>
 </html>
