@@ -9,6 +9,7 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack.min.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack-all.js"></script>
+    
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #121212; color: #FFFFFF; user-select: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -36,7 +37,6 @@
         .c-tab { transition: all 0.2s ease; }
         .word-break { word-break: break-word; }
         
-        /* 🟢 대시보드 업계 표준 (GridStack) 편집 모드 스타일 */
         .grid-stack-item-content { background-color: #1C1C1E; border-radius: 24px; transition: box-shadow 0.2s, border 0.2s; overflow-y: hidden !important; }
         .grid-stack-item-content > div { height: 100%; }
         .editing-layout .grid-stack-item-content { 
@@ -47,7 +47,6 @@
         }
         .editing-layout .grid-stack-item-content:active { cursor: grabbing; }
         
-        /* GridStack 크기 조절 핸들 디자인 */
         .ui-resizable-se {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%233182F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>');
             background-position: center;
@@ -62,6 +61,7 @@
         .is-editing iframe { pointer-events: none; }
     </style>
 </head>
+
 <body class="min-h-screen p-3 sm:p-4 md:p-8 bg-[#121212]">
     <div class="max-w-[1200px] mx-auto relative pb-24">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 md:mb-8 gap-3 md:gap-4">
@@ -83,7 +83,6 @@
             </div>
         </header>
 
-        <!-- 🚀 업계 표준 GridStack 레이아웃 엔진 적용 -->
         <main class="grid-stack mt-2 sm:mt-4 opacity-0 transition-opacity duration-500" id="main-grid">
             
             <!-- 1. 실시간 시세 -->
@@ -95,39 +94,39 @@
                             <span class="text-[12px] sm:text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
                         </div>
                         
-                        <div class="flex-1 overflow-y-auto custom-scroll pr-1 min-h-0 relative flex flex-col">
-                            <div id="coin-cards-container" class="grid grid-cols-2 gap-2.5 sm:gap-4 shrink-0 transition-opacity duration-300">
-                                <div id="card-btc" onclick="window.toggleInlineChart('BTC', '비트코인')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                        <div class="flex-1 min-h-0 relative flex flex-col">
+                            <div id="coin-cards-container" class="grid grid-cols-2 grid-rows-2 gap-2.5 sm:gap-4 flex-1 w-full h-full transition-opacity duration-300">
+                                <div id="card-btc" onclick="window.toggleInlineChart('BTC', '비트코인')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02] flex flex-col justify-center w-full h-full">
                                     <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                                        <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="BTC">
-                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">비트코인</span>
+                                        <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0" alt="BTC">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px] truncate">비트코인</span>
                                     </div>
                                     <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-btc">$ --</div>
-                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-btc">--%</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1 shrink-0" id="pct-btc">--%</div>
                                 </div>
-                                <div id="card-eth" onclick="window.toggleInlineChart('ETH', '이더리움')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                <div id="card-eth" onclick="window.toggleInlineChart('ETH', '이더리움')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02] flex flex-col justify-center w-full h-full">
                                     <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                                        <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="ETH">
-                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">이더리움</span>
+                                        <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0" alt="ETH">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px] truncate">이더리움</span>
                                     </div>
                                     <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-eth">$ --</div>
-                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-eth">--%</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1 shrink-0" id="pct-eth">--%</div>
                                 </div>
-                                <div id="card-sol" onclick="window.toggleInlineChart('SOL', '솔라나')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                <div id="card-sol" onclick="window.toggleInlineChart('SOL', '솔라나')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02] flex flex-col justify-center w-full h-full">
                                     <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                                        <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SOL">
-                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">솔라나</span>
+                                        <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0" alt="SOL">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px] truncate">솔라나</span>
                                     </div>
                                     <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sol">$ --</div>
-                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sol">--%</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1 shrink-0" id="pct-sol">--%</div>
                                 </div>
-                                <div id="card-sui" onclick="window.toggleInlineChart('SUI', '수이')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                                <div id="card-sui" onclick="window.toggleInlineChart('SUI', '수이')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02] flex flex-col justify-center w-full h-full">
                                     <div class="flex items-center space-x-2 mb-2 sm:mb-3">
-                                        <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SUI">
-                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">수이</span>
+                                        <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0" alt="SUI">
+                                        <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px] truncate">수이</span>
                                     </div>
                                     <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sui">$ --</div>
-                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sui">--%</div>
+                                    <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1 shrink-0" id="pct-sui">--%</div>
                                 </div>
                             </div>
 
@@ -382,18 +381,16 @@
             } catch(e) {}
         };
 
-        // 🟢 업계 표준 GridStack 엔진 (자동 빈칸 채우기 & 자유 패킹)
         let grid = null;
-
         function initGrid() {
             if (typeof GridStack === 'undefined') return;
             grid = GridStack.init({
                 column: 12,
-                cellHeight: 30, // 30px 단위로 초정밀 높이 조절
+                cellHeight: 30,
                 margin: 10,
-                staticGrid: true, // 기본 모드에서는 레이아웃 고정
+                staticGrid: true,
                 animate: true,
-                float: false, // 💡 핵심: 위젯을 드래그하면 중력처럼 위로 당겨져 빈 공간(gap)을 절대 허용하지 않습니다.
+                float: false,
                 disableOneColumnMode: false,
                 oneColumnSize: 768
             });
@@ -408,7 +405,6 @@
             const btnReset = document.getElementById('btn-reset-layout');
             
             if(isEditing) {
-                // 편집 켜기
                 grid.setStatic(false);
                 document.body.classList.add('editing-layout');
                 document.body.classList.add('is-editing');
@@ -417,11 +413,10 @@
                 btnReset.classList.remove('hidden');
                 showToast("✅ 대시보드 편집 켜짐: 위젯을 드래그하여 아무 빈칸에나 던져보세요! 크기 조절은 우측 하단 모서리에서 가능합니다.");
             } else {
-                // 편집 끄기
                 grid.setStatic(true);
                 document.body.classList.remove('editing-layout');
                 document.body.classList.remove('is-editing');
-                btnEdit.innerHTML = '📐 마그네틱 레이아웃 편집';
+                btnEdit.innerHTML = '📐 마그네틱 레이아 편집';
                 btnSave.classList.add('hidden');
                 btnReset.classList.add('hidden');
             }
@@ -429,7 +424,6 @@
 
         window.resetDefaultLayout = () => {
             if(!grid) return;
-            // 기본 레이아웃 하드코딩 복구
             const defaultLayout = [
                 {id: 'widget-prices', x: 0, y: 0, w: 7, h: 14},
                 {id: 'widget-fear', x: 7, y: 0, w: 5, h: 7},
@@ -443,11 +437,11 @@
 
         window.saveLayout = async () => {
             if(!db || !isAdminLoggedIn || !grid) return;
-            const layout = grid.save(); // GridStack 엔진이 현재 배치를 자동 추출
+            const layout = grid.save(); 
             try {
                 await setDoc(doc(db, 'system', 'layout'), { data: layout });
                 showToast("완벽한 패킹 레이아웃이 영구 저장되었습니다!");
-                window.toggleEditMode(); // 저장 후 편집모드 종료
+                window.toggleEditMode();
             } catch(e) { showToast("레이아웃 저장 실패"); }
         };
 
@@ -461,13 +455,12 @@
                     const docSnap = await getDoc(doc(db, 'system', 'layout'));
                     if (docSnap.exists()) {
                         const layout = docSnap.data().data;
-                        grid.load(layout); // 저장된 배치로 위젯들을 자동 이동
+                        grid.load(layout); 
                     }
                 }
             } catch(e) {
                 console.error("Layout load error:", e);
             } finally {
-                // 💡 DB 로드에 성공하든 실패하든 화면은 무조건 보여주도록 보장 (투명 버그 방지)
                 document.getElementById('main-grid').classList.remove('opacity-0');
             }
         }
@@ -566,13 +559,17 @@
                             document.getElementById('admin-toolbar').classList.replace('flex', 'hidden');
                         }
                         document.getElementById('db-status').innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-link"></i> DB ON</span>`;
+                        
+                        if (window.currentCommentsData && window.currentCommentsData.length > 0) {
+                            window.renderComments(window.currentCommentsData);
+                        }
                     } else {
                         signInAnonymously(auth);
                     }
                 });
 
                 listenToFirebase();
-                initGrid(); // 🚀 GridStack 엔진 시동
+                initGrid();
                 loadLayout();
             } catch (error) {
                 document.getElementById('db-status').innerHTML = `<span class="text-[#F04452] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> DB OFF</span>`;
@@ -704,7 +701,8 @@
                     const date = new Date(c.createdAt);
                     const timeStr = `${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
                     
-                    const deleteBtn = (isAdminLoggedIn || isMe) ? `<button onclick="window.openConfirmModal('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 ml-2">삭제</button>` : '';
+                    // 수정됨: 오직 관리자(isAdminLoggedIn)만 삭제 버튼을 볼 수 있도록 isMe 제거
+                    const deleteBtn = isAdminLoggedIn ? `<button onclick="window.openConfirmModal('${c.id}')" class="text-[11px] font-bold text-[#F04452] hover:text-red-400 ml-2">삭제</button>` : '';
                     const bubbleBg = depth === 0 ? 'bg-[#24272F]' : 'bg-[#2C2C2E]';
                     const textSize = depth === 0 ? 'text-[15px]' : 'text-[14px]';
                     const descCount = countDescendants(c.id);
@@ -723,12 +721,13 @@
                                 <button onclick="window.toggleReplyForm('${c.id}')" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white transition-colors">답글 달기</button>
                                 ${(descCount > 0) ? `<button onclick="window.toggleReplies('${c.id}')" id="toggle-btn-${c.id}" data-count="${descCount}" class="text-[12px] font-bold ${window.openedReplies.has(c.id) ? 'text-[#8B95A1]' : 'text-[#3182F6]'} hover:text-blue-400 transition-colors">${window.openedReplies.has(c.id) ? '답글 접기 ▲' : `답글 ${descCount}개 보기 ▼`}</button>` : ''}
                             </div>
+                            <!-- 수정됨: 대댓글 작성 폼 레이아웃을 w-full 및 위아래 분리형으로 수정하여 메인 폼과 동일한 느낌으로 명확화 -->
                             <div id="reply-form-${c.id}" class="hidden mt-3 ml-2 border-l-2 border-[#2C2C2E] pl-3 w-full pr-4">
-                                <div class="flex flex-col gap-2">
-                                    <input type="text" id="reply-nick-${c.id}" class="w-1/2 sm:w-1/3 bg-[#1C1C1E] text-white text-[13px] rounded-[10px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="닉네임" value="${currentSavedNick}" maxlength="15">
-                                    <div class="flex gap-2">
-                                        <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[14px] rounded-[10px] px-3 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C]" placeholder="답글 작성...">
-                                        <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[10px] text-[13px] font-bold transition-colors shrink-0">등록</button>
+                                <div class="flex flex-col gap-2.5 w-full">
+                                    <input type="text" id="reply-nick-${c.id}" class="w-full bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all" placeholder="닉네임 (대댓글용)" value="${currentSavedNick}" maxlength="15">
+                                    <div class="flex gap-2 w-full">
+                                        <input type="text" id="reply-input-${c.id}" class="flex-1 bg-[#1C1C1E] text-white text-[13px] sm:text-[14px] rounded-[10px] sm:rounded-[12px] px-3.5 py-2.5 focus:outline-none focus:bg-[#2C2C2E] border border-[#2C2C2E] placeholder:text-[#4A4A4C] transition-all" placeholder="답글 내용을 입력하세요...">
+                                        <button onclick="window.submitReply('${c.id}')" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 rounded-[10px] sm:rounded-[12px] text-[13px] sm:text-[14px] font-bold transition-colors shrink-0">등록</button>
                                     </div>
                                 </div>
                             </div>
@@ -783,7 +782,6 @@
             
             if (nick) {
                 localStorage.setItem('crypto_nickname', nick);
-                // 메인 닉네임 인풋도 동기화
                 const mainNickInput = document.getElementById('nickname-input');
                 if(mainNickInput) mainNickInput.value = nick;
             } else {
