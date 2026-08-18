@@ -35,108 +35,108 @@
         .word-break { word-break: break-word; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 bg-[#121212]">
+<body class="min-h-screen p-3 sm:p-4 md:p-8 bg-[#121212]">
     <div class="max-w-[1200px] mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 md:mb-8 gap-3 md:gap-4">
             <div>
                 <!-- 🟢 관리자 모드 진입 시크릿 버튼 (비밀번호: 4242) -->
-                <div class="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onclick="promptAdminLogin()">
+                <div class="flex items-center space-x-2 mb-1.5 md:mb-2 cursor-pointer w-fit" onclick="promptAdminLogin()">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                     <span class="text-xs font-semibold tracking-wider text-green-500">LIVE TERMINAL</span>
                 </div>
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">SEONGWONNOTTI</h1>
+                <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">SEONGWONNOTTI</h1>
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" id="main-grid">
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-stretch" id="main-grid">
             
             <!-- 왼쪽 컬럼 (넓은 영역: 시세, AI, 인사이트) -->
-            <div class="lg:col-span-7 flex flex-col gap-6 items-stretch" id="col-left">
+            <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6 items-stretch" id="col-left">
                 <!-- 실시간 시세 -->
-                <section id="widget-prices" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-white tracking-tight">실시간 시세</h2>
-                        <span class="text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
+                <section id="widget-prices" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-4 sm:mb-6">
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 시세</h2>
+                        <span class="text-[12px] sm:text-[13px] text-[#8B95A1] font-medium" id="clock">00:00:00</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div id="card-btc" onclick="toggleInlineChart('BTC', '비트코인')" class="bg-[#24272F] p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[22px] h-[22px] rounded-full" alt="BTC">
-                                <span class="font-bold text-[#D1D6DB] text-[15px]">비트코인</span>
+                    <div class="grid grid-cols-2 gap-2.5 sm:gap-4">
+                        <div id="card-btc" onclick="toggleInlineChart('BTC', '비트코인')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                            <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/1/standard/bitcoin.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="BTC">
+                                <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">비트코인</span>
                             </div>
-                            <div class="text-2xl font-bold text-white tracking-tight" id="price-btc">$ --</div>
-                            <div class="text-[14px] font-semibold mt-1" id="pct-btc">--%</div>
+                            <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-btc">$ --</div>
+                            <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-btc">--%</div>
                         </div>
-                        <div id="card-eth" onclick="toggleInlineChart('ETH', '이더리움')" class="bg-[#24272F] p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[22px] h-[22px] rounded-full" alt="ETH">
-                                <span class="font-bold text-[#D1D6DB] text-[15px]">이더리움</span>
+                        <div id="card-eth" onclick="toggleInlineChart('ETH', '이더리움')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                            <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/279/standard/ethereum.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="ETH">
+                                <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">이더리움</span>
                             </div>
-                            <div class="text-2xl font-bold text-white tracking-tight" id="price-eth">$ --</div>
-                            <div class="text-[14px] font-semibold mt-1" id="pct-eth">--%</div>
+                            <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-eth">$ --</div>
+                            <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-eth">--%</div>
                         </div>
-                        <div id="card-sol" onclick="toggleInlineChart('SOL', '솔라나')" class="bg-[#24272F] p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[22px] h-[22px] rounded-full" alt="SOL">
-                                <span class="font-bold text-[#D1D6DB] text-[15px]">솔라나</span>
+                        <div id="card-sol" onclick="toggleInlineChart('SOL', '솔라나')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                            <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SOL">
+                                <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">솔라나</span>
                             </div>
-                            <div class="text-2xl font-bold text-white tracking-tight" id="price-sol">$ --</div>
-                            <div class="text-[14px] font-semibold mt-1" id="pct-sol">--%</div>
+                            <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sol">$ --</div>
+                            <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sol">--%</div>
                         </div>
-                        <div id="card-sui" onclick="toggleInlineChart('SUI', '수이')" class="bg-[#24272F] p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[22px] h-[22px] rounded-full" alt="SUI">
-                                <span class="font-bold text-[#D1D6DB] text-[15px]">수이</span>
+                        <div id="card-sui" onclick="toggleInlineChart('SUI', '수이')" class="bg-[#24272F] p-3.5 sm:p-5 rounded-[20px] transition-all duration-300 cursor-pointer hover:border hover:border-[#3182F6]/50 hover:scale-[1.02]">
+                            <div class="flex items-center space-x-2 mb-2 sm:mb-3">
+                                <img src="https://assets.coingecko.com/coins/images/26375/standard/sui-ocean-square.png" class="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full" alt="SUI">
+                                <span class="font-bold text-[#D1D6DB] text-[13px] sm:text-[15px]">수이</span>
                             </div>
-                            <div class="text-2xl font-bold text-white tracking-tight" id="price-sui">$ --</div>
-                            <div class="text-[14px] font-semibold mt-1" id="pct-sui">--%</div>
+                            <div class="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" id="price-sui">$ --</div>
+                            <div class="text-[12px] sm:text-[14px] font-semibold mt-0.5 sm:mt-1" id="pct-sui">--%</div>
                         </div>
                     </div>
 
-                    <!-- 실시간 인라인 차트 영역 (카드 클릭 시 시세 박스 내부 바로 아래에 펼쳐짐) -->
-                    <div id="inline-chart-container" class="hidden mt-4 pt-4 border-t border-[#2C2C2E] transition-all duration-300">
+                    <!-- 실시간 인라인 차트 영역 -->
+                    <div id="inline-chart-container" class="hidden mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[#2C2C2E] transition-all duration-300">
                         <div class="flex justify-between items-center mb-3">
                             <div class="flex items-center space-x-2">
                                 <img id="inline-chart-icon" src="" class="w-5 h-5 rounded-full" alt="icon">
-                                <span id="inline-chart-title" class="text-[14px] font-bold text-[#3182F6]"></span>
+                                <span id="inline-chart-title" class="text-[13px] sm:text-[14px] font-bold text-[#3182F6]"></span>
                             </div>
                             <button onclick="closeInlineChart()" class="text-[12px] font-semibold text-[#8B95A1] hover:text-white bg-[#2C2C2E] px-2.5 py-1 rounded-full transition-colors">차트 닫기 ▲</button>
                         </div>
-                        <div class="w-full h-[320px] rounded-[16px] overflow-hidden bg-[#121212] border border-[#2C2C2E]">
+                        <div class="w-full h-[250px] sm:h-[320px] rounded-[16px] overflow-hidden bg-[#121212] border border-[#2C2C2E]">
                             <iframe id="inline-tradingview-iframe" class="w-full h-full border-0" src=""></iframe>
                         </div>
                     </div>
                 </section>
 
                 <!-- AI 자동 브리핑 -->
-                <section id="widget-ai" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                    <div class="flex justify-between items-center mb-6">
+                <section id="widget-ai" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-4 sm:mb-6">
                         <div class="flex items-center space-x-2">
-                            <h2 class="text-xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
+                            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">AI 자동 브리핑</h2>
                             <span class="px-2 py-0.5 bg-[#3182F6]/20 text-[#3182F6] text-[11px] font-bold rounded-[6px]">Gemini 3.7</span>
                         </div>
                     </div>
-                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-5 pb-2">
-                        <button onclick="switchTab('news')" id="tab-news" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#3182F6] text-white text-[14px] font-bold transition-colors">🔥 헤드라인</button>
-                        <button onclick="switchTab('analyst')" id="tab-analyst" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">💡 전문가 의견</button>
-                        <button onclick="switchTab('macro')" id="tab-macro" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">🌍 거시경제</button>
-                        <button onclick="switchTab('sentiment')" id="tab-sentiment" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[14px] font-bold transition-colors">📊 투자 심리</button>
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 sm:mb-5 pb-1">
+                        <button onclick="switchTab('news')" id="tab-news" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#3182F6] text-white text-[13px] sm:text-[14px] font-bold transition-colors">🔥 헤드라인</button>
+                        <button onclick="switchTab('analyst')" id="tab-analyst" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">💡 전문가 의견</button>
+                        <button onclick="switchTab('macro')" id="tab-macro" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">🌍 거시경제</button>
+                        <button onclick="switchTab('sentiment')" id="tab-sentiment" class="tab-btn whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#2C2C2E] text-[#8B95A1] hover:bg-[#3A3A3C] text-[13px] sm:text-[14px] font-bold transition-colors">📊 투자 심리</button>
                     </div>
-                    <div id="ai-content-box" class="bg-[#24272F] rounded-[20px] p-5 min-h-[140px]">
-                        <p id="ai-text" class="text-[#D1D6DB] leading-relaxed text-[15px] font-medium tracking-wide">데이터베이스 연결 대기 중...</p>
-                        <p id="ai-time" class="text-[12px] text-[#8B95A1] mt-4 font-mono"></p>
+                    <div id="ai-content-box" class="bg-[#24272F] rounded-[20px] p-4 sm:p-5 min-h-[120px]">
+                        <p id="ai-text" class="text-[#D1D6DB] leading-relaxed text-[14px] sm:text-[15px] font-medium tracking-wide">데이터베이스 연결 대기 중...</p>
+                        <p id="ai-time" class="text-[11px] sm:text-[12px] text-[#8B95A1] mt-3 font-mono"></p>
                     </div>
                 </section>
 
                 <!-- 컴퍼니 인사이트 -->
-                <section id="widget-insight" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
+                <section id="widget-insight" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-4 sm:mb-6">
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">COMPANY INSIGHT</h2>
                     </div>
-                    <div class="bg-[#24272F] rounded-[20px] p-6">
-                        <h3 id="report-title" class="text-lg font-bold text-white mb-3">연결 대기 중...</h3>
-                        <p id="report-content" class="text-[#D1D6DB] text-[15px] leading-relaxed mb-4 whitespace-pre-wrap">데이터를 불러오는 중입니다.</p>
-                        <div class="flex justify-between items-center text-[12px] text-[#8B95A1] font-mono">
+                    <div class="bg-[#24272F] rounded-[20px] p-4 sm:p-6">
+                        <h3 id="report-title" class="text-base sm:text-lg font-bold text-white mb-2 sm:mb-3">연결 대기 중...</h3>
+                        <p id="report-content" class="text-[#D1D6DB] text-[14px] sm:text-[15px] leading-relaxed mb-3 sm:mb-4 whitespace-pre-wrap">데이터를 불러오는 중입니다.</p>
+                        <div class="flex justify-between items-center text-[11px] sm:text-[12px] text-[#8B95A1] font-mono">
                             <span id="report-date">--</span>
                         </div>
                     </div>
@@ -144,61 +144,61 @@
             </div>
 
             <!-- 오른쪽 컬럼 (좁은 영역: 심리, 뉴스, 댓글) -->
-            <div class="lg:col-span-5 flex flex-col gap-6 items-stretch" id="col-right">
+            <div class="lg:col-span-5 flex flex-col gap-4 md:gap-6 items-stretch" id="col-right">
                 
                 <!-- 시장 심리 (Fear & Greed) -->
-                <section id="widget-fear" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                    <h2 class="text-xl font-bold text-white tracking-tight mb-4">시장 심리 (Fear & Greed)</h2>
-                    <div class="flex items-center justify-between bg-[#24272F] rounded-[20px] p-5">
+                <section id="widget-fear" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mb-3 sm:mb-4">시장 심리 (Fear & Greed)</h2>
+                    <div class="flex items-center justify-between bg-[#24272F] rounded-[20px] p-4 sm:p-5">
                         <div class="flex flex-col">
-                            <span id="fg-value" class="text-4xl font-extrabold text-white mb-1">--</span>
-                            <span id="fg-class" class="text-[14px] font-bold text-[#8B95A1]">분석중</span>
+                            <span id="fg-value" class="text-3xl sm:text-4xl font-extrabold text-white mb-1">--</span>
+                            <span id="fg-class" class="text-[13px] sm:text-[14px] font-bold text-[#8B95A1]">분석중</span>
                         </div>
-                        <div class="w-16 h-16 rounded-full border-4 border-[#2C2C2E] flex items-center justify-center" id="fg-ring">
-                            <i class="fa-solid fa-fire text-2xl text-[#8B95A1]" id="fg-icon"></i>
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-[#2C2C2E] flex items-center justify-center" id="fg-ring">
+                            <i class="fa-solid fa-fire text-xl sm:text-2xl text-[#8B95A1]" id="fg-icon"></i>
                         </div>
                     </div>
                 </section>
 
                 <!-- 실시간 속보 -->
-                <section id="widget-news" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex flex-col h-fit" draggable="false">
-                    <div class="flex justify-between items-center mb-5">
-                        <h2 class="text-xl font-bold text-white tracking-tight">실시간 속보</h2>
-                        <span class="text-[12px] px-2 py-1 bg-[#2C2C2E] text-[#8B95A1] rounded-[6px]">Auto</span>
+                <section id="widget-news" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex flex-col h-fit" draggable="false">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">실시간 속보</h2>
+                        <span class="text-[11px] sm:text-[12px] px-2 py-1 bg-[#2C2C2E] text-[#8B95A1] rounded-[6px]">Auto</span>
                     </div>
-                    <ul id="news-list" class="space-y-4">
-                        <li class="text-[#8B95A1] text-[14px] text-center py-4">뉴스를 불러오는 중입니다... <i class="fa-solid fa-spinner fa-spin ml-1"></i></li>
+                    <ul id="news-list" class="space-y-3 max-h-[260px] sm:max-h-[360px] overflow-y-auto hide-scrollbar pr-1">
+                        <li class="text-[#8B95A1] text-[13px] sm:text-[14px] text-center py-4">뉴스를 불러오는 중입니다... <i class="fa-solid fa-spinner fa-spin ml-1"></i></li>
                     </ul>
                 </section>
 
                 <!-- 의견 나누기 (댓글) -->
-                <section id="widget-comments" class="draggable bg-[#1C1C1E] rounded-[24px] p-6 w-full toss-card flex-1 min-h-[450px] flex flex-col" draggable="false">
-                    <div class="flex justify-between items-center mb-4 pr-2">
-                        <h2 class="text-xl font-bold text-white tracking-tight">의견 나누기</h2>
-                        <span id="db-status" class="text-[12px] text-[#8B95A1] bg-[#2C2C2E] px-2 py-1 rounded-[6px]">연결 확인중</span>
+                <section id="widget-comments" class="draggable bg-[#1C1C1E] rounded-[24px] p-4 sm:p-6 w-full toss-card flex-1 min-h-[380px] sm:min-h-[450px] flex flex-col" draggable="false">
+                    <div class="flex justify-between items-center mb-3 sm:mb-4 pr-1">
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">의견 나누기</h2>
+                        <span id="db-status" class="text-[11px] sm:text-[12px] text-[#8B95A1] bg-[#2C2C2E] px-2 py-1 rounded-[6px]">연결 확인중</span>
                     </div>
                     
                     <!-- 댓글 방 분리 탭 -->
-                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 pb-1 w-full">
-                        <button onclick="changeCommentRoom('all')" id="c-tab-all" class="c-tab active whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#3182F6] text-white text-[13px] font-bold">전체 시장</button>
-                        <button onclick="changeCommentRoom('BTC')" id="c-tab-BTC" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">비트코인</button>
-                        <button onclick="changeCommentRoom('ETH')" id="c-tab-ETH" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">이더리움</button>
-                        <button onclick="changeCommentRoom('SOL')" id="c-tab-SOL" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">솔라나</button>
-                        <button onclick="changeCommentRoom('SUI')" id="c-tab-SUI" class="c-tab whitespace-nowrap shrink-0 px-3.5 py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[13px] font-bold">수이</button>
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-3 sm:mb-4 pb-1 w-full">
+                        <button onclick="changeCommentRoom('all')" id="c-tab-all" class="c-tab active whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#3182F6] text-white text-[12px] sm:text-[13px] font-bold">전체 시장</button>
+                        <button onclick="changeCommentRoom('BTC')" id="c-tab-BTC" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">비트코인</button>
+                        <button onclick="changeCommentRoom('ETH')" id="c-tab-ETH" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">이더리움</button>
+                        <button onclick="changeCommentRoom('SOL')" id="c-tab-SOL" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">솔라나</button>
+                        <button onclick="changeCommentRoom('SUI')" id="c-tab-SUI" class="c-tab whitespace-nowrap shrink-0 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2C2C2E] text-[#8B95A1] text-[12px] sm:text-[13px] font-bold">수이</button>
                     </div>
 
                     <!-- 댓글 폼 (닉네임 자동 저장) -->
-                    <form id="comment-form" class="flex flex-col gap-3 mb-6 w-full pb-6 border-b border-[#2C2C2E]">
-                        <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[16px] px-4 py-3 text-white text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="닉네임 (한 번 적으면 자동 저장)" maxlength="15">
+                    <form id="comment-form" class="flex flex-col gap-2.5 mb-4 sm:mb-6 w-full pb-4 sm:pb-6 border-b border-[#2C2C2E]">
+                        <input type="text" id="nickname-input" class="w-full bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="닉네임 (자동 저장)" maxlength="15">
                         <div class="flex gap-2 w-full">
-                            <input type="text" id="comment-input" class="flex-1 bg-[#24272F] rounded-[16px] px-4 py-3 text-white text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="자유롭게 의견을 남겨주세요.">
-                            <button type="submit" id="comment-submit" class="bg-[#3182F6] hover:bg-blue-600 text-white px-5 py-3 rounded-[16px] font-bold transition-colors whitespace-nowrap shrink-0">등록</button>
+                            <input type="text" id="comment-input" class="flex-1 bg-[#24272F] rounded-[14px] sm:rounded-[16px] px-3.5 py-2.5 sm:px-4 sm:py-3 text-white text-[14px] sm:text-[15px] focus:outline-none focus:bg-[#2C2C2E] transition-all placeholder:text-[#4A4A4C]" placeholder="자유롭게 의견을 남겨주세요.">
+                            <button type="submit" id="comment-submit" class="bg-[#3182F6] hover:bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-[14px] sm:rounded-[16px] text-[13px] sm:text-[15px] font-bold transition-colors whitespace-nowrap shrink-0">등록</button>
                         </div>
                     </form>
 
-                    <!-- 댓글 리스트 (카카오톡 피드 스타일) -->
-                    <div id="comments-list" class="flex-1 overflow-y-auto hide-scrollbar space-y-4 pr-1">
-                        <div class="text-[#8B95A1] py-8 text-center text-[15px]">데이터베이스 연결 대기 중...</div>
+                    <!-- 댓글 리스트 (카카오톡 피드 스타일, 내부에 스크롤 캡 적용) -->
+                    <div id="comments-list" class="flex-1 max-h-[350px] sm:max-h-[460px] overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pr-1">
+                        <div class="text-[#8B95A1] py-8 text-center text-[14px]">데이터베이스 연결 대기 중...</div>
                     </div>
                 </section>
             </div>
