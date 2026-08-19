@@ -804,6 +804,17 @@
                     container.classList.add('hidden'); window.openedReplies.delete(commentId);
                     const count = btn.getAttribute('data-count');
                     btn.innerHTML = `답글 ${count}개 보기 ▼`; btn.classList.replace('text-[#8B95A1]', 'text-[#3182F6]');
+
+                    // 답글 목록을 접을 때, 열려있던 이 댓글의 대댓글 입력창도 함께 닫습니다.
+                    const replyForm = document.getElementById(`reply-form-${commentId}`);
+                    if (replyForm && !replyForm.classList.contains('hidden')) {
+                        replyForm.classList.add('hidden');
+                    }
+
+                    // 접히는 답글 목록 내부에 열려있던 대댓글 입력창들도 모두 함께 닫습니다.
+                    container.querySelectorAll('[id^="reply-form-"]').forEach(form => {
+                        form.classList.add('hidden');
+                    });
                 }
             }
         };
